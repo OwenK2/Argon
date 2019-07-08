@@ -25,15 +25,25 @@ struct Mouse {
 };
 struct Keyboard {
 	int key;
+	bool lshift;
+	bool rshift;
+	bool lctrl;
+	bool rctrl;
+	bool lalt;
+	bool ralt;
+	bool lmeta;
+	bool rmeta;
+	bool numlock;
+	bool capslock;
+	bool ctrl;
+	bool shift;
 	bool alt;
 	bool meta;
-	bool shift;
-	bool ctrl;
 };
 struct Wheel {
 	int x;
 	int y;
-	int dir;
+	bool dir;
 };
 enum EventType {
 	LOAD = 0,
@@ -45,17 +55,23 @@ enum EventType {
 	SIZE_CHANGED = 6,
 	MINIMIZED = 7,
 	MAXIMIZED = 8,
-	MOUSEENTER = 9,
-	MOUSELEAVE = 10,
-	CLOSE = 11,
-	MOUSEUP = 12,
-	MOUSEDOWN = 13,
-	MOUSEMOVE = 14,
-	MOUSEWHEEL = 15,
-	CLICK = 16,
-	KEYUP = 17,
-	KEYDOWN = 18,
-	QUIT = 19
+	RESTORED = 9,
+	MOUSEENTER = 10,
+	MOUSELEAVE = 11,
+	KEYBOARDFOCUS = 12,
+	KEYBOARDBLUR = 13,
+	CLOSE = 14,
+	TAKE_FOCUS = 15,
+	HIT_TEST = 16,
+	MOUSEUP = 17,
+	MOUSEDOWN = 18,
+	MOUSEMOVE = 19,
+	MOUSEWHEEL = 20,
+	CLICK = 21,
+	DBLCLICK = 22,
+	KEYUP = 23,
+	KEYDOWN = 24,
+	QUIT = 25
 };
 struct Event {
 	EventType type;
@@ -69,6 +85,8 @@ class Argon {
 private:
 	const char* name;
 	int frameTime;				//Precalculated to save time, time per frame
+	bool canCountClick = false;
+	Uint32 lastClick;
 	SDL_Window* win;
 	SDL_Renderer* ren;
 	std::function<void(Argon*,Event)> eventHandler;
@@ -79,6 +97,7 @@ private:
 public:
 	bool running = false;
 	int fps = 60;
+	int dblClickTime = 400; //MS allowed between clicks to consider double click
 	int w = 500;
 	int h = 500;
 	int dw = 500;
