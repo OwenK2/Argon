@@ -4,6 +4,13 @@ using namespace std;
 void eventHandler(Argon* argon, Event e) {
 	/*
 	EVENTS
+	EVENT LAYOUT
+	{
+		EventType type (enum listed below)
+		Mouse mouse {x,y,which,down}
+		Keyboard keyboard {key, lshift, rshift, lctrl, rctrl, lalt, ralt, lmeta, rmeta, numlock, capslock, ctrl, shift, alt, meta};
+		Wheel wheel {x,y.dir} (x & y are deltas and dir is a bool where false is normal and 1 is inverted)
+	}
 	=======================
 	LOAD
 	SHOWN
@@ -26,7 +33,8 @@ void eventHandler(Argon* argon, Event e) {
 	MOUSEDOWN
 	MOUSEMOVE
 	MOUSEWHEEL
-	CLICK				----- (DBL CLICK TOO?)
+	CLICK
+	DBLCLICK
 	KEYUP
 	KEYDOWN
 	QUIT
