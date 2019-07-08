@@ -23,7 +23,6 @@ public:
 	~Argon();
 };
 
-// gay gay gay gay gay gay
 
 // Color fillStyle;
 // Color strokeStyle;
