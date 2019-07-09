@@ -12,10 +12,10 @@
 #define ARGON_BASIC 8196
 
 struct Color {
-	char r;
-	char g;
-	char b;
-	char a;
+	uint8_t r;
+	uint8_t g;
+	uint8_t b;
+	uint8_t a;
 };
 struct Mouse {
 	int x;
@@ -24,7 +24,8 @@ struct Mouse {
 	bool down;
 };
 struct Keyboard {
-	int key;
+	int keyCode;
+	const char* key;
 	bool lshift;
 	bool rshift;
 	bool lctrl;
@@ -45,6 +46,7 @@ struct Wheel {
 	int y;
 	bool dir;
 };
+typedef Color* ImageData;
 enum EventType {
 	LOAD = 0,
 	SHOWN = 1,
@@ -76,7 +78,7 @@ enum EventType {
 struct Event {
 	EventType type;
 	Mouse mouse;
-	Keyboard keyboard;
+	Keyboard keys;
 	Wheel wheel;
 };
 
@@ -105,12 +107,17 @@ public:
 	int x = SDL_WINDOWPOS_UNDEFINED;
 	int y = SDL_WINDOWPOS_UNDEFINED;
 	Mouse mouse = {0,0,0,false};
-	Keyboard keyboard = {-1,false,false,false};
+	Keyboard keyboard = {-1,"",false,false,false,false,false,false,false,false,false,false,false,false,false,false};
 	Argon(const char* _name, int _fps, uint32_t _flags,void _event(Argon* a, Event e),void _loop(Argon* a));
 	Argon(const char* _name, int _w, int _h, int _fps, uint32_t _flags, void _event(Argon* a, Event e),void _loop(Argon* a));
 	Argon(const char* _name, int _x, int _y, int _w, int _h, int _fps, uint32_t _flags, void _event(Argon* a, Event e),void _loop(Argon* a));
 	~Argon();
-
+	ImageData screenshot();
+	ImageData screenshot(int x,int y,int w,int h);
+	void setColor(int r, int g, int b, int a = SDL_ALPHA_OPAQUE);
+	void point(int x, int y);
+	void line(int x1, int y1, int x2, int y2);
+	void rect(int x1, int y1, int x2, int y2);
 	void quit();
 };
 

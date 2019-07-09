@@ -1,6 +1,7 @@
 #include <iostream>
 #include "argon.h"
 using namespace std;
+int sx, sy;
 void eventHandler(Argon* argon, Event e) {
 	/*
 	EVENTS
@@ -40,7 +41,32 @@ void eventHandler(Argon* argon, Event e) {
 	QUIT
 	*/
 	//ECHO EVEnt
-	// cout << "\e[1m\e[33m[EVENT]  " << e.type << "\e[0m" << endl;
+	switch(e.type) {
+		case LOAD: {
+			argon->setColor(255,255,255);
+			break;
+		}
+		case KEYDOWN: {
+			if(strncmp(e.keys.key,"SPACE",100)) {
+				cout << "Taking Screenshot" << endl;
+				argon->screenshot();
+			}
+			break;
+		}
+		case MOUSEMOVE: {
+			if(e.mouse.down) {
+				argon->line(sx, sy, e.mouse.x,e.mouse.y);
+				sx = e.mouse.x;
+				sy = e.mouse.y;
+			}
+			break;
+		}
+		case MOUSEDOWN: {
+			sx = e.mouse.x;
+			sy = e.mouse.y;
+		}
+		default: break;
+	}
 }
 void program(Argon* argon) {
 

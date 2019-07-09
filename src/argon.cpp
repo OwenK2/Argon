@@ -1,4 +1,7 @@
 #include "argon.h"
+//FOR TESTING DELETE WHEN DONE
+#include <iostream>
+using namespace std;
 
 Argon::Argon(const char* _name, int _fps, uint32_t _flags,void _event(Argon* a, Event e),void _loop(Argon* a)) : name(_name), fps(_fps), eventHandler(_event), renderLoop(_loop) {
   start(_flags);
@@ -19,6 +22,7 @@ Argon::~Argon() {
 
 void Argon::start(int flags) {
   SDL_Init(SDL_INIT_VIDEO);
+  IMG_Init(IMG_INIT_PNG|IMG_INIT_JPG);
   win = SDL_CreateWindow(name,x,y,w,h,flags);
 	ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE);
 	SDL_SetWindowTitle(win,name);
@@ -97,17 +101,19 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
       break;
     }
     case SDL_MOUSEWHEEL: {
-      Event mouseEvent = {MOUSEWHEEL, {}, {}, {e->wheel.x,e->wheel.y,static_cast<bool>(e->wheel.direction)}};
+      Event mouseEvent = {MOUSEWHEEL,{}, {},{e->wheel.x,e->wheel.y,static_cast<bool>(e->wheel.direction)}};
       argon->eventHandler(argon,mouseEvent);
       break;
     }
     case SDL_KEYDOWN: {
-      Event keyEvent = {KEYDOWN,{},{e->key.keysym.scancode,static_cast<bool>(KMOD_LSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_RSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_LCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_RCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_LALT & e->key.keysym.mod),static_cast<bool>(KMOD_RALT & e->key.keysym.mod),static_cast<bool>(KMOD_LGUI & e->key.keysym.mod),static_cast<bool>(KMOD_RGUI & e->key.keysym.mod),static_cast<bool>(KMOD_NUM & e->key.keysym.mod),static_cast<bool>(KMOD_CAPS & e->key.keysym.mod),static_cast<bool>(KMOD_CTRL & e->key.keysym.mod),static_cast<bool>(KMOD_SHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_ALT & e->key.keysym.mod),static_cast<bool>(KMOD_GUI & e->key.keysym.mod)}};
+      argon->keyboard = {e->key.keysym.scancode,SDL_GetKeyName(e->key.keysym.sym),static_cast<bool>(KMOD_LSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_RSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_LCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_RCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_LALT & e->key.keysym.mod),static_cast<bool>(KMOD_RALT & e->key.keysym.mod),static_cast<bool>(KMOD_LGUI & e->key.keysym.mod),static_cast<bool>(KMOD_RGUI & e->key.keysym.mod),static_cast<bool>(KMOD_NUM & e->key.keysym.mod),static_cast<bool>(KMOD_CAPS & e->key.keysym.mod),static_cast<bool>(KMOD_CTRL & e->key.keysym.mod),static_cast<bool>(KMOD_SHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_ALT & e->key.keysym.mod),static_cast<bool>(KMOD_GUI & e->key.keysym.mod)};
+      Event keyEvent = {KEYDOWN, {}, argon->keyboard};
       argon->eventHandler(argon,keyEvent);
       break;
     }
     case SDL_KEYUP: {
-      Event keyEvent = {KEYUP,{},{e->key.keysym.scancode,static_cast<bool>(KMOD_LSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_RSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_LCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_RCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_LALT & e->key.keysym.mod),static_cast<bool>(KMOD_RALT & e->key.keysym.mod),static_cast<bool>(KMOD_LGUI & e->key.keysym.mod),static_cast<bool>(KMOD_RGUI & e->key.keysym.mod),static_cast<bool>(KMOD_NUM & e->key.keysym.mod),static_cast<bool>(KMOD_CAPS & e->key.keysym.mod),static_cast<bool>(KMOD_CTRL & e->key.keysym.mod),static_cast<bool>(KMOD_SHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_ALT & e->key.keysym.mod),static_cast<bool>(KMOD_GUI & e->key.keysym.mod)}};
+      argon->keyboard = {e->key.keysym.scancode,SDL_GetKeyName(e->key.keysym.sym),static_cast<bool>(KMOD_LSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_RSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_LCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_RCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_LALT & e->key.keysym.mod),static_cast<bool>(KMOD_RALT & e->key.keysym.mod),static_cast<bool>(KMOD_LGUI & e->key.keysym.mod),static_cast<bool>(KMOD_RGUI & e->key.keysym.mod),static_cast<bool>(KMOD_NUM & e->key.keysym.mod),static_cast<bool>(KMOD_CAPS & e->key.keysym.mod),static_cast<bool>(KMOD_CTRL & e->key.keysym.mod),static_cast<bool>(KMOD_SHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_ALT & e->key.keysym.mod),static_cast<bool>(KMOD_GUI & e->key.keysym.mod)};
+      Event keyEvent = {KEYUP, {}, argon->keyboard};
       argon->eventHandler(argon,keyEvent);
       break;
     }
@@ -198,6 +204,31 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
 	}
   return 0;
 }
+ImageData Argon::screenshot() {
+  return screenshot(0,0,w,h);
+}
+ImageData Argon::screenshot(int _x,int _y,int _w,int _h) {
+  ImageData data;
+  SDL_Surface *surface = SDL_CreateRGBSurface(0, w, h, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
+  SDL_RenderReadPixels(ren, NULL, SDL_PIXELFORMAT_RGBA32, surface->pixels, _w*4);
+  IMG_SavePNG(surface, "screenshot.png");
+  SDL_FreeSurface(surface);
+  return data;
+}
+void Argon::setColor(int r,int g,int b, int a) {
+  SDL_SetRenderDrawColor(ren,r,g,b,a);
+}
+void Argon::point(int x, int y) {
+  SDL_RenderDrawPoint(ren, x, y);
+}
+void Argon::line(int x1, int y1, int x2, int y2) {
+  SDL_RenderDrawLine(ren, x1, y1, x2, y2);
+}
+void Argon::rect(int x1, int y1, int x2, int y2) {
+  SDL_Rect rect = {x1,y1,x2,y2};
+  SDL_RenderFillRect(ren, &rect);
+}
+
 
 void Argon::quit() {
 	running = 0;
