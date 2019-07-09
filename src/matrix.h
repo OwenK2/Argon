@@ -16,7 +16,7 @@ class Matrix {
     Matrix(uint8_t _rows, uint8_t _cols);
     Matrix(uint8_t _rows, uint8_t _cols, std::vector<double> _m);
 
-    virtual ~Matrix();
+    virtual ~Matrix() {};
 
     Matrix* transpose();
 

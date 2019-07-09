@@ -7,7 +7,7 @@ Matrix::Matrix() {
 }
 
 Matrix::Matrix(uint8_t _rows, uint8_t _cols) : rows(_rows), cols(_cols) {
-  m = std:vector<double>(rows*cols);
+  m = std::vector<double>(rows*cols);
 }
 
 Matrix::Matrix(uint8_t _rows, uint8_t _cols, std::vector<double> _m) : rows(_rows), cols(_cols), m(_m) {}
@@ -43,16 +43,15 @@ Matrix* Matrix::compose(Matrix _m) {
     return this;
   }
 
-  std::vector<double> composed;
+  std::vector<double> composed(rows*_m.cols);
   for(uint8_t r = 0; r < rows; ++r) {
     for(uint8_t c = 0; c < _m.cols; ++c) {
-      double sum = 0;
       for(uint8_t i = 0; i < cols; ++i) {
         composed[r*_m.cols+c] += m[r*cols+i]*_m.m[i*_m.cols+c];
       }
     }
   }
   m = composed;
-
+  cols = _m.cols;
   return this;
 }

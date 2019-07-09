@@ -1,7 +1,16 @@
 #include <iostream>
+
 #include "argon.h"
+
+#include "vector.h"
+#include "matrix.h"
+
+
 using namespace std;
+
+
 int sx, sy;
+
 void eventHandler(Argon* argon, Event e) {
 	/*
 	EVENTS

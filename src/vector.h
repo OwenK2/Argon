@@ -19,16 +19,16 @@ class Vector {
     Vector(uint8_t _dim, std::vector<double> _comps);
     Vector(uint8_t _dim, double _r, std::vector<double> _angs);
     //R2
-    Vector(double x, double y);
-    Vector(double r, double theta, bool _spherical);
+    Vector(double _x, double _y);
+    Vector(double _r, double _theta, bool _spherical);
     //R3
-    Vector(double x, double y, double z);
-    Vector(double r, double theta, double psi, bool _spherical);
+    Vector(double _x, double _y, double _z);
+    Vector(double _r, double _theta, double _psi, bool _spherical);
     //R4
-    Vector(double x, double y, double z, double w);
-    Vector(double r, double theta, double psi, double phi, bool _spherical);
+    Vector(double _x, double _y, double _z, double _w);
+    Vector(double _r, double _theta, double _psi, double _phi, bool _spherical);
 
-    virtual ~Vector();
+    virtual ~Vector() {};
 
     Vector* scale(double scalar);
 
