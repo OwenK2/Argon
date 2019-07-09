@@ -1,5 +1,10 @@
 #include "vector.h"
 
+Vector::Vector() {
+  dim = 0;
+  r = 0;
+}
+
 Vector::Vector(uint8_t _dim, std::vector<double> _comps) {
   if(_comps.size() != dim) {
     dim = 0;
@@ -96,11 +101,13 @@ Vector::Vector(double _r, double _theta, double _psi, double _phi, bool _spheric
 }
 
 
-void Vector::scale(double scalar) {
+Vector* Vector::scale(double scalar) {
   for(uint8_t d = 0; d < comps.size(); ++d) {
     comps[d] *= scalar;
   }
   r *= scalar;
+
+  return this;
 }
 
 

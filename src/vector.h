@@ -14,6 +14,7 @@ class Vector {
     double r;
     std::vector<double> angs; // [xy, z, w, ...]
 
+    Vector();
     //Rn
     Vector(uint8_t _dim, std::vector<double> _comps);
     Vector(uint8_t _dim, double _r, std::vector<double> _angs);
@@ -27,9 +28,9 @@ class Vector {
     Vector(double x, double y, double z, double w);
     Vector(double r, double theta, double psi, double phi, bool _spherical);
 
-    ~Vector();
+    virtual ~Vector();
 
-    void scale(double scalar);
+    Vector* scale(double scalar);
 
     static std::vector<double> cartesianFromSpherical(std::vector<double> angles, double r);
     static std::vector<double> sphericalFromCartesian(std::vector<double> components);
