@@ -29,6 +29,8 @@ class Vector {
 
     ~Vector();
 
+    void scale(double scalar);
+
     static std::vector<double> cartesianFromSpherical(std::vector<double> angles, double r);
     static std::vector<double> sphericalFromCartesian(std::vector<double> components);
 };

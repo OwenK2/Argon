@@ -96,6 +96,14 @@ Vector::Vector(double _r, double _theta, double _psi, double _phi, bool _spheric
 }
 
 
+void Vector::scale(double scalar) {
+  for(uint8_t d = 0; d < comps.size(); ++d) {
+    comps[d] *= scalar;
+  }
+  r *= scalar;
+}
+
+
 std::vector<double> Vector::cartesianFromSpherical(std::vector<double> angles, double r = 1) {
   if(angles.empty()) {
     return std::vector<double>{r};
