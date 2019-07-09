@@ -47,9 +47,20 @@ void eventHandler(Argon* argon, Event e) {
 			break;
 		}
 		case KEYDOWN: {
-			if(strncmp(e.keys.key,"SPACE",100)) {
+			if(strcmp(e.keys.key,"Space") == 0) {
 				cout << "Taking Screenshot" << endl;
 				argon->screenshot();
+			}
+			else if(strcmp(e.keys.key,"Return") == 0) {
+				cout << "Collecting Pixels" << endl;
+				ImageData data = argon->getImageData(0,0,10,10);
+				for(int i = 0;i < sizeof(data);++i) {
+					if(i % 4 == 0) {
+						if(i > 0) {cout << ")" << endl << "rgba(";}
+						else {cout<< "rgba(";}
+					}
+					cout << data[i];
+			  }
 			}
 			break;
 		}
@@ -61,9 +72,17 @@ void eventHandler(Argon* argon, Event e) {
 			}
 			break;
 		}
+		case DBLCLICK: {
+			argon->rect(e.mouse.x - 100, e.mouse.y - 100, 200,200);
+		}
 		case MOUSEDOWN: {
 			sx = e.mouse.x;
 			sy = e.mouse.y;
+			break;
+		}
+		case DROPFILE: {
+			cout << e.drop.file << " has been dropped" << endl;
+			break;
 		}
 		default: break;
 	}
@@ -72,7 +91,7 @@ void program(Argon* argon) {
 
 }
 int main(int argc, char* argv[]) {
-	Argon argon("Test Window",					//WINDOW NAME
+	Argon argon("Argon",					//WINDOW NAME
 	 						60,											//FPS
 							ARGON_BASIC|ARGON_RESIZEABLE,						//FLAGS
 							&eventHandler,

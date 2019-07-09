@@ -46,7 +46,11 @@ struct Wheel {
 	int y;
 	bool dir;
 };
-typedef Color* ImageData;
+struct FileDrop {
+	const char* file;
+	uint32_t timestamp;
+};
+typedef uint8_t* ImageData;
 enum EventType {
 	LOAD = 0,
 	SHOWN = 1,
@@ -73,13 +77,15 @@ enum EventType {
 	DBLCLICK = 22,
 	KEYUP = 23,
 	KEYDOWN = 24,
-	QUIT = 25
+	DROPFILE = 25,
+	QUIT = 26
 };
 struct Event {
 	EventType type;
 	Mouse mouse;
 	Keyboard keys;
 	Wheel wheel;
+	FileDrop drop;
 };
 
 
@@ -112,12 +118,15 @@ public:
 	Argon(const char* _name, int _w, int _h, int _fps, uint32_t _flags, void _event(Argon* a, Event e),void _loop(Argon* a));
 	Argon(const char* _name, int _x, int _y, int _w, int _h, int _fps, uint32_t _flags, void _event(Argon* a, Event e),void _loop(Argon* a));
 	~Argon();
-	ImageData screenshot();
-	ImageData screenshot(int x,int y,int w,int h);
 	void setColor(int r, int g, int b, int a = SDL_ALPHA_OPAQUE);
 	void point(int x, int y);
 	void line(int x1, int y1, int x2, int y2);
 	void rect(int x1, int y1, int x2, int y2);
+	ImageData getImageData();
+	ImageData getImageData(int x, int y, int w, int h);
+	void putImageData(ImageData data);
+	void screenshot();
+	void screenshot(int x,int y,int w,int h);
 	void quit();
 };
 

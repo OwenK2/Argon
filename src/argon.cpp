@@ -199,21 +199,16 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
           argon->eventHandler(argon,winEvent);
           break;
         }
+        case SDL_DROPFILE: {
+          Event dropEvent = {DROPFILE,{},{},{},{e->drop.file,e->drop.timestamp}};
+          argon->eventHandler(argon,dropEvent);
+          SDL_free(e->drop.file);
+          break;
+        }
       }
     }
 	}
   return 0;
-}
-ImageData Argon::screenshot() {
-  return screenshot(0,0,w,h);
-}
-ImageData Argon::screenshot(int _x,int _y,int _w,int _h) {
-  ImageData data;
-  SDL_Surface *surface = SDL_CreateRGBSurface(0, w, h, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
-  SDL_RenderReadPixels(ren, NULL, SDL_PIXELFORMAT_RGBA32, surface->pixels, _w*4);
-  IMG_SavePNG(surface, "screenshot.png");
-  SDL_FreeSurface(surface);
-  return data;
 }
 void Argon::setColor(int r,int g,int b, int a) {
   SDL_SetRenderDrawColor(ren,r,g,b,a);
@@ -227,6 +222,40 @@ void Argon::line(int x1, int y1, int x2, int y2) {
 void Argon::rect(int x1, int y1, int x2, int y2) {
   SDL_Rect rect = {x1,y1,x2,y2};
   SDL_RenderFillRect(ren, &rect);
+}
+ImageData Argon::getImageData() {
+  return getImageData(0,0,w,h);
+}
+ImageData Argon::getImageData(int x,int y,int w,int h) {
+  SDL_Surface* surface = SDL_GetWindowSurface(win);
+  if(SDL_MUSTLOCK(surface)){SDL_LockSurface(surface);}
+  SDL_Rect rect = {x,y,w,h};
+  int pitch = w*surface->format->BytesPerPixel;
+  int size = h*pitch;
+  uint8_t* data = (uint8_t*)malloc(size);
+  SDL_RenderReadPixels(ren, &rect, SDL_PIXELFORMAT_RGBA32, surface->pixels, pitch);
+  uint8_t* pixels = (uint8_t*)surface->pixels;
+  for(int i = 0;i < size;++i) {
+    uint32_t pixel = pixels[i];
+    data[i] = (uint8_t)pixel;
+    cout << (uint32_t)pixel << endl;
+  }
+  if(SDL_MUSTLOCK(surface)){SDL_UnlockSurface(surface);}
+  SDL_FreeSurface(surface);
+  return data;
+}
+void Argon::putImageData(ImageData data) {
+
+}
+void Argon::screenshot() {
+  return screenshot(0,0,w,h);
+}
+void Argon::screenshot(int x,int y,int w,int h) {
+  SDL_Surface *surface = SDL_CreateRGBSurface(0, w, h, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
+  SDL_Rect rect = {x,y,w,h};
+  SDL_RenderReadPixels(ren, &rect, SDL_PIXELFORMAT_RGBA32, surface->pixels, w*surface->format->BytesPerPixel);
+  IMG_SavePNG(surface, "screenshot.png");
+  SDL_FreeSurface(surface);
 }
 
 
