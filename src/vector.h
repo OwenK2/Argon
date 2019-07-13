@@ -30,7 +30,15 @@ class Vector {
 
     virtual ~Vector() {};
 
-    Vector* scale(double scalar);
+    Vector* scl(double scalar);
+    Vector* add(Vector v);
+    Vector* sub(Vector v);
+
+    Vector* dot(Vector v);
+    Vector* cross(Vector v);
+
+    Vector* operator+(Vector v);
+    Vector* operator-(Vector v);
 
     static std::vector<double> cartesianFromSpherical(std::vector<double> angles, double r);
     static std::vector<double> sphericalFromCartesian(std::vector<double> components);
