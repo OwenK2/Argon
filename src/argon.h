@@ -1,3 +1,5 @@
+#ifndef ARGON_H
+#define ARGON_H
 #include <functional>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -11,12 +13,6 @@
 #define ARGON_HIGHDPI 8192
 #define ARGON_BASIC 8196
 
-struct Color {
-	uint8_t r;
-	uint8_t g;
-	uint8_t b;
-	uint8_t a;
-};
 struct Mouse {
 	int x;
 	int y;
@@ -129,6 +125,7 @@ public:
 	void screenshot(int x,int y,int w,int h);
 	void quit();
 };
+#endif
 
 // Color fillStyle;
 // Color strokeStyle;
