@@ -57,8 +57,10 @@ void eventHandler(Argon* argon, Event e) {
 		}
 		case KEYDOWN: {
 			if(strcmp(e.keys.key,"Space") == 0) {
-				cout << "Taking Screenshot" << endl;
-				argon->screenshot();
+				cout << "Making Shape" << endl;
+				Shape shape(250,250,3,100,0);
+				shape.fill();
+
 			}
 			else if(strcmp(e.keys.key,"Return") == 0) {
 				cout << "Collecting Pixels" << endl;

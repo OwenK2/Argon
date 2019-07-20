@@ -8,6 +8,7 @@
 class Vector {
   public:
     uint8_t dim;
+    double* x, y, z, w;
 
     std::vector<double> comps; // [x, y, z, w, ...]
 
@@ -34,7 +35,7 @@ class Vector {
     Vector* add(Vector v);
     Vector* sub(Vector v);
 
-    Vector* dot(Vector v);
+    double dot(Vector v);
     Vector* cross(Vector v);
 
     Vector* operator+(Vector v);

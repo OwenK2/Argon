@@ -34,7 +34,7 @@ public:
   bool containsPoint(double x, double y);
   bool containsPoint(Vector point);
   void applyTransform(Matrix transform);
-  void fill();
+  void fill(Argon* argon);
   void stroke();
 };
 

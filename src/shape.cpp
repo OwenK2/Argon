@@ -28,7 +28,7 @@ void Shape::getDimensions() {
 
 bool Shape::containsPoint(double x, double y) {
   Vector vec(x,y);
-  containsPoint(vec);
+  return containsPoint(vec);
 }
 bool Shape::containsPoint(Vector point) {
   int wn = 0;
@@ -50,6 +50,15 @@ bool Shape::containsPoint(Vector point) {
       }
     }
   }
-
   return wn != 0;
+}
+
+void Shape::fill(Argon* argon) {
+  for(int y = 0;y < h;++y) {
+    for(int x = 0;x < w;++x) {
+      if(containsPoint(x,y)) {
+        SDL_RenderDrawPoint(argon->ren,x,y);
+      }
+    }
+  }
 }

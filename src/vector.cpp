@@ -50,8 +50,6 @@ Vector::Vector(double _x, double _y) {
   dim = 2;
 
   comps = {_x, _y};
-  double* this->x = &comps[0];
-  double* this->y = &comps[1];
 
   std::vector<double> sphericals = sphericalFromCartesian(comps);
   r = sphericals[0];
@@ -64,17 +62,12 @@ Vector::Vector(double _r, double _theta, bool _spherical) {
   angs = {_theta};
 
   comps = cartesianFromSpherical(angs, r);
-  double* this->x = &comps[0];
-  double* this->y = &comps[1];
 }
 
 Vector::Vector(double _x, double _y, double _z) {
   dim = 3;
 
   comps = {_x, _y, _z};
-  double* this->x = &comps[0];
-  double* this->y = &comps[1];
-  double* this->z = &comps[2];
 
   std::vector<double> sphericals = sphericalFromCartesian(comps);
   r = sphericals[0];
@@ -87,19 +80,12 @@ Vector::Vector(double _r, double _theta, double _psi, bool _spherical) {
   angs = {_theta, _psi};
 
   comps = cartesianFromSpherical(angs, r);
-  double* this->x = &comps[0];
-  double* this->y = &comps[1];
-  double* this->z = &comps[2];
 }
 
 Vector::Vector(double _x, double _y, double _z, double _w) {
   dim = 4;
 
   comps = {_x, _y, _z, _w};
-  double* this->x = &comps[0];
-  double* this->y = &comps[1];
-  double* this->z = &comps[2];
-  double* this->w = &comps[3];
 
   std::vector<double> sphericals = sphericalFromCartesian(comps);
   r = sphericals[0];
@@ -112,10 +98,6 @@ Vector::Vector(double _r, double _theta, double _psi, double _phi, bool _spheric
   angs = {_theta, _psi, _phi};
 
   comps = cartesianFromSpherical(angs, r);
-  double* this->x = &comps[0];
-  double* this->y = &comps[1];
-  double* this->z = &comps[2];
-  double* this->w = &comps[3];
 }
 
 
@@ -128,7 +110,7 @@ Vector* Vector::scl(double scalar) {
   return this;
 }
 
-Vector* add(Vector v) {
+Vector* Vector::add(Vector v) {
   if(dim != v.dim) {
     std::cout << "Can't add vectors of different dimensions" << std::endl;
     return this;
@@ -138,7 +120,7 @@ Vector* add(Vector v) {
   }
   return this;
 }
-Vector* sub(Vector v) {
+Vector* Vector::sub(Vector v) {
   if(dim != v.dim) {
     std::cout << "Can't subtract vectors of different dimensions" << std::endl;
     return this;
@@ -149,7 +131,7 @@ Vector* sub(Vector v) {
   return this;
 }
 
-double dot(Vector v) {
+double Vector::dot(Vector v) {
   if(dim != v.dim) {
     std::cout << "Can't dot vectors of different dimensions" << std::endl;
   }
@@ -159,15 +141,15 @@ double dot(Vector v) {
   }
   return dotProduct;
 }
-Vector* cross(Vector v) {
-
+Vector* Vector::cross(Vector v) {
+  return this;
 }
 
-Vector* operator+(Vector v) {
-  return this->add(v);
+Vector* Vector::operator+(Vector v) {
+  return add(v);
 }
-Vector* operator-(Vector v) {
-  return this.sub(v);
+Vector* Vector::operator-(Vector v) {
+  return sub(v);
 }
 
 
