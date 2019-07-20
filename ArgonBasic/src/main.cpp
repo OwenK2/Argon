@@ -1,9 +1,5 @@
 #include <iostream>
-
 #include "argon.h"
-
-#include "vector.h"
-#include "matrix.h"
 
 
 using namespace std;
@@ -56,13 +52,7 @@ void eventHandler(Argon* argon, Event e) {
 			break;
 		}
 		case KEYDOWN: {
-			if(strcmp(e.keys.key,"Space") == 0) {
-				cout << "Making Shape" << endl;
-				Shape shape(250,250,3,100,0);
-				shape.fill();
-
-			}
-			else if(strcmp(e.keys.key,"Return") == 0) {
+			if(strcmp(e.keys.key,"Return") == 0) {
 				cout << "Collecting Pixels" << endl;
 				ImageData data = argon->getImageData(0,0,10,10);
 				for(int i = 0;i < sizeof(data);++i) {
