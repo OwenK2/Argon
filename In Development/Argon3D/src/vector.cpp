@@ -101,34 +101,42 @@ Vector::Vector(double _r, double _theta, double _psi, double _phi, bool _spheric
 }
 
 
-Vector* Vector::scl(double scalar) {
+Vector& Vector::scl(double scalar) {
   for(uint8_t d = 0; d < comps.size(); ++d) {
     comps[d] *= scalar;
   }
   r *= scalar;
 
-  return this;
+  return *this;
 }
 
+<<<<<<< HEAD:src/vector.cpp
 Vector* Vector::add(Vector v) {
+=======
+Vector& Vector::add(Vector v) {
+>>>>>>> b4762ab0f1032041fb89959d5f024e6c488830f7:In Development/Argon3D/src/vector.cpp
   if(dim != v.dim) {
     std::cout << "Can't add vectors of different dimensions" << std::endl;
-    return this;
+    return *this;
   }
   for(uint8_t d = 0; d < dim; ++d) {
     comps[d] += v.comps[d];
   }
-  return this;
+  return *this;
 }
+<<<<<<< HEAD:src/vector.cpp
 Vector* Vector::sub(Vector v) {
+=======
+Vector& Vector::sub(Vector v) {
+>>>>>>> b4762ab0f1032041fb89959d5f024e6c488830f7:In Development/Argon3D/src/vector.cpp
   if(dim != v.dim) {
     std::cout << "Can't subtract vectors of different dimensions" << std::endl;
-    return this;
+    return *this;
   }
   for(uint8_t d = 0; d < dim; ++d) {
     comps[d] -= v.comps[d];
   }
-  return this;
+  return *this;
 }
 
 double Vector::dot(Vector v) {
@@ -141,6 +149,7 @@ double Vector::dot(Vector v) {
   }
   return dotProduct;
 }
+<<<<<<< HEAD:src/vector.cpp
 Vector* Vector::cross(Vector v) {
   return this;
 }
@@ -150,6 +159,18 @@ Vector* Vector::operator+(Vector v) {
 }
 Vector* Vector::operator-(Vector v) {
   return sub(v);
+=======
+Vector Vector::cross(Vector v) {
+  Vector cp;
+  return cp;
+}
+
+Vector& Vector::operator+=(Vector v) {
+  return this->add(v);
+}
+Vector& Vector::operator-=(Vector v) {
+  return this->sub(v);
+>>>>>>> b4762ab0f1032041fb89959d5f024e6c488830f7:In Development/Argon3D/src/vector.cpp
 }
 
 
