@@ -1,8 +1,6 @@
 #ifndef ARGON_H
 #define ARGON_H
 
-
-#include <functional>
 #include <vector>
 #include <algorithm>
 #include <SDL2/SDL.h>
@@ -171,10 +169,10 @@ private:
 	//Hidden Functions
 	void init(int x, int y, int w, int h, int flags);
 	void loop();
-	vector<Listener> mapEvent(EventType type);
+	Listeners* getListeners(EventType type);
 	static int eventWatcher(void* data, SDL_Event* e);
 	void eventHandler(Event* event, Listeners* listeners);
-	
+
 public:
 	const char* name;
 	bool running = false;
@@ -184,8 +182,8 @@ public:
 
 
 	Argon(const char* name, int fps, int flags);
-	Argon(const char* name, int fps, int w, int h, int flags);
-	Argon(const char* name, int fps, int x, int y, int w, int h, int flags);
+	Argon(const char* name, int w, int h, int fps, int flags);
+	Argon(const char* name, int x, int y, int w, int h, int fps, int flags);
 	~Argon();
 
 	void addListener(EventType type, Listener listener);

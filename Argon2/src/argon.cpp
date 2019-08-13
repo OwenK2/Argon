@@ -13,8 +13,6 @@ Argon::Argon(const char* _name, int _fps, int _x, int _y, int _w, int _h, int _f
   init(_x,_y,_w,_h,_flags);
 }
 Argon::~Argon() {
-  cout << "Destroying Argon" << endl;
-  running = false;
   SDL_DelEventWatch(eventWatcher,this);
   SDL_DestroyRenderer(ren);
   SDL_DestroyWindow(win);
@@ -43,7 +41,7 @@ void Argon::loop() {
     int maxBehind = 10;
     if(time <= now) {
       while(time <= now  && (maxBehind--)) {
-        //RUN TASKS
+        //RUNSHIT
         time += frameTime;
       }
       SDL_RenderPresent(ren);
@@ -51,7 +49,7 @@ void Argon::loop() {
     else {
       SDL_Delay(time - now);
     }
-    while(SDL_PollEvent(&e)) {} //CRASHES IF YOU DONT HAVE THIS FOR SOME REASON
+    SDL_PollEvent(&e);
   }
 }
 
@@ -60,7 +58,7 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
   switch(e->type) {
     case SDL_QUIT: {
       WindowEvent event = {
-        QUIT, 
+        QUIT,
         a->window.x,
         a->window.y,
         a->window.w,
@@ -70,7 +68,7 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
         a->window.shown
       };
       a->eventHandler(&event,&a->quitListeners);
-      a->~Argon();
+      a->running = false;
       break;
     }
     case SDL_MOUSEBUTTONDOWN: {
@@ -92,61 +90,59 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
   return 0;
 }
 void Argon::eventHandler(Event* event, Listeners* listeners) {
-  cout << "Event Handled " << event->type << endl;
-  cout << "    " << listeners->size() << " Listeners Found" << endl;
+  cout << listeners->size() << " Listeners Found for " << event->type << endl;
   for(auto it = listeners->begin(); it != listeners->end(); ++it) {
     (*it)(event);
   }
 }
 
 
-Listeners Argon::mapEvent(EventType type) {
-  Listeners listeners;
+Listeners* Argon::getListeners(EventType type) {
+  Listeners* listeners;
   switch(type) {
-    case QUIT: listeners = quitListeners; break;
-    case CLOSE: listeners = closeListeners; break;
-    case SHOWN: listeners = shownListeners; break;
-    case HIDDEN: listeners = hiddenListeners; break;
-    case EXPOSED: listeners = exposedListeners; break;
-    case MOVED: listeners = movedListeners; break;
-    case RESIZED: listeners = resizedListeners; break;
-    case SIZECHANGED: listeners = sizeChangedListeners; break;
-    case MINIMIZED: listeners = minimizedListeners; break;
-    case MAXIMIZED: listeners = maximizedListeners; break;
-    case RESTORED: listeners = restoredListeners; break;
-    case KEYBOARDFOCUS: listeners = keyboardFocusListeners; break;
-    case KEYBOARDBLUR: listeners = keyboardBlurListeners; break;
-    case TAKEFOCUS: listeners = takeFocusListeners; break;
-    case HITTEST: listeners = hitTestListeners; break;
-    case MOUSEENTER: listeners = mouseEnterListeners; break;
-    case MOUSELEAVE: listeners = mouseLeaveListeners; break;
-    case MOUSEUP: listeners = mouseUpListeners; break;
-    case MOUSEDOWN: listeners = mouseDownListeners; break;
-    case MOUSEMOVE: listeners = mouseMoveListeners; break;
-    case CLICK: listeners = clickListeners; break;
-    case DBLCLICK: listeners = dblclickListeners; break;
-    case KEYUP: listeners = keyUpListeners; break;
-    case KEYDOWN: listeners = keyDownListeners; break;
-    case MOUSEWHEEL: listeners = mouseWheelListeners; break;
-    case DROPFILE: listeners = dropFileListeners; break;
+    case QUIT: listeners = &quitListeners; break;
+    case CLOSE: listeners = &closeListeners; break;
+    case SHOWN: listeners = &shownListeners; break;
+    case HIDDEN: listeners = &hiddenListeners; break;
+    case EXPOSED: listeners = &exposedListeners; break;
+    case MOVED: listeners = &movedListeners; break;
+    case RESIZED: listeners = &resizedListeners; break;
+    case SIZECHANGED: listeners = &sizeChangedListeners; break;
+    case MINIMIZED: listeners = &minimizedListeners; break;
+    case MAXIMIZED: listeners = &maximizedListeners; break;
+    case RESTORED: listeners = &restoredListeners; break;
+    case KEYBOARDFOCUS: listeners = &keyboardFocusListeners; break;
+    case KEYBOARDBLUR: listeners = &keyboardBlurListeners; break;
+    case TAKEFOCUS: listeners = &takeFocusListeners; break;
+    case HITTEST: listeners = &hitTestListeners; break;
+    case MOUSEENTER: listeners = &mouseEnterListeners; break;
+    case MOUSELEAVE: listeners = &mouseLeaveListeners; break;
+    case MOUSEUP: listeners = &mouseUpListeners; break;
+    case MOUSEDOWN: listeners = &mouseDownListeners; break;
+    case MOUSEMOVE: listeners = &mouseMoveListeners; break;
+    case CLICK: listeners = &clickListeners; break;
+    case DBLCLICK: listeners = &dblclickListeners; break;
+    case KEYUP: listeners = &keyUpListeners; break;
+    case KEYDOWN: listeners = &keyDownListeners; break;
+    case MOUSEWHEEL: listeners = &mouseWheelListeners; break;
+    case DROPFILE: listeners = &dropFileListeners; break;
   }
   return listeners;
 }
 void Argon::addListener(EventType type, Listener listener) {
-  Listeners listeners = mapEvent(type);
+  Listeners* listeners = getListeners(type);
   cout << "Listener added to " << type << endl;
-  listeners.push_back(listener);
+  listeners->push_back(listener);
 }
 bool Argon::removeListener(EventType type, Listener listener) {
-  Listeners listeners = mapEvent(type);
-  Listeners::iterator it = find(listeners.begin(),listeners.end(), listener);
-  if(it != listeners.end()) {
-    listeners.erase(it--);
+  Listeners* listeners = getListeners(type);
+  Listeners::iterator it = find(listeners->begin(),listeners->end(), listener);
+  if(it != listeners->end()) {
+    listeners->erase(it--);
     return true;
   }
   return false;
 }
-
 void Argon::setFps(int _fps) {
   fps = _fps;
   frameTime = 1000 / fps;
