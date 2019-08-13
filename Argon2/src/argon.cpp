@@ -3,13 +3,13 @@
 using namespace std;
 
 
-Argon::Argon(const char* _name, int _fps, int _flags) : name(_name), fps(_fps) {
+Argon::Argon(const char* _name, std::function<void()> userFunction, int _fps, int _flags) : userFunction(userFunction), name(_name), fps(_fps) {
   init(SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,500,500,_flags);
 }
-Argon::Argon(const char* _name, int _fps, int _w, int _h, int _flags) : name(_name), fps(_fps) {
+Argon::Argon(const char* _name, std::function<void()> userFunction, int _fps, int _w, int _h, int _flags) : userFunction(userFunction), name(_name), fps(_fps) {
   init(SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,_w,_h,_flags);
 }
-Argon::Argon(const char* _name, int _fps, int _x, int _y, int _w, int _h, int _flags) : name(_name), fps(_fps) {
+Argon::Argon(const char* _name, std::function<void()> userFunction, int _fps, int _x, int _y, int _w, int _h, int _flags) : userFunction(userFunction), name(_name), fps(_fps) {
   init(_x,_y,_w,_h,_flags);
 }
 Argon::~Argon() {
@@ -29,8 +29,21 @@ void Argon::init(int x,int y,int w,int h,int flags) {
   SDL_GL_GetDrawableSize(win, &window.dw, &window.dh);
   SDL_AddEventWatch(eventWatcher, this);
   running = true;
-  frameTime = 1000 / fps;
+  frameTime = 1000 / fps; 
+}
+
+void Argon::begin() {
+  userThread = thread(userFunction);
   loop();
+
+  end();
+}
+
+void Argon::end() {
+  // At the end, we have to join user thread
+  // this is to ensure proper destruction of variables
+  // so don't forget to do this.
+  userThread.join();
 }
 
 void Argon::loop() {

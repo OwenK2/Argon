@@ -4,6 +4,14 @@
 #include <vector>
 #include <algorithm>
 #include <SDL2/SDL.h>
+
+#include <thread>
+// This is not strictly necessary, you could
+// use a function pointer. But, functional
+// works with class methods and function pointers
+// dont.
+#include <functional>
+
 using namespace std;
 
 
@@ -180,11 +188,18 @@ public:
 	Mouse mouse = {0,0,0,false};
 	Keyboard keyboard = {-1,"",false,false,false,false,false,false,false,false,false,false,false,false,false,false};
 
+	function<void()> userFunction;
+	thread userThread;
 
-	Argon(const char* name, int fps, int flags);
-	Argon(const char* name, int w, int h, int fps, int flags);
-	Argon(const char* name, int x, int y, int w, int h, int fps, int flags);
+	Argon(const char* name, std::function<void()> userFunction, int fps, int flags);
+	Argon(const char* name, std::function<void()> userFunction, int w, int h, int fps, int flags);
+	Argon(const char* name, std::function<void()> userFunction, int x, int y, int w, int h, int fps, int flags);
 	~Argon();
+
+	// Just doing this temporarily because I'm too lazy
+	// to come up with a good solution, but im sure you can
+	void begin();
+	void end();
 
 	void addListener(EventType type, Listener listener);
 	bool removeListener(EventType type, Listener listener);
