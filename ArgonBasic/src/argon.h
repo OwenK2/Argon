@@ -1,8 +1,9 @@
 #ifndef ARGON_H
 #define ARGON_H
 #include <functional>
+#include <vector>
+#include "vector.h"
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #define ARGON_FULLSCREEN 1
 #define ARGON_SHOWN 4
 #define ARGON_HIDDEN 8
@@ -46,7 +47,6 @@ struct FileDrop {
 	const char* file;
 	uint32_t timestamp;
 };
-typedef uint8_t* ImageData;
 enum EventType {
 	LOAD = 0,
 	SHOWN = 1,
@@ -84,7 +84,6 @@ struct Event {
 	FileDrop drop;
 };
 
-
 class Argon {
 private:
 	const char* name;
@@ -114,15 +113,13 @@ public:
 	Argon(const char* _name, int _w, int _h, int _fps, uint32_t _flags, void _event(Argon* a, Event e),void _loop(Argon* a));
 	Argon(const char* _name, int _x, int _y, int _w, int _h, int _fps, uint32_t _flags, void _event(Argon* a, Event e),void _loop(Argon* a));
 	~Argon();
+
 	void setColor(int r, int g, int b, int a = SDL_ALPHA_OPAQUE);
-	void point(int x, int y);
-	void line(int x1, int y1, int x2, int y2);
-	void rect(int x1, int y1, int x2, int y2);
-	ImageData getImageData();
-	ImageData getImageData(int x, int y, int w, int h);
-	void putImageData(ImageData data);
-	void screenshot();
-	void screenshot(int x,int y,int w,int h);
+	void point(double x, double y);
+	void line(double x1, double y1, double x2, double y2);
+	void triangle(double x1, double y1, double x2, double y2, double x3, double y3);
+	void rect(double x1, double y1, double x2, double y2);
+	void polygon(std::vector<double> points);
 	void quit();
 };
 #endif

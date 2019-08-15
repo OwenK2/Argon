@@ -213,49 +213,54 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
 void Argon::setColor(int r,int g,int b, int a) {
   SDL_SetRenderDrawColor(ren,r,g,b,a);
 }
-void Argon::point(int x, int y) {
+void Argon::point(double x, double y) {
   SDL_RenderDrawPoint(ren, x, y);
 }
-void Argon::line(int x1, int y1, int x2, int y2) {
+void Argon::line(double x1, double y1, double x2, double y2) {
   SDL_RenderDrawLine(ren, x1, y1, x2, y2);
 }
-void Argon::rect(int x1, int y1, int x2, int y2) {
-  SDL_Rect rect = {x1,y1,x2,y2};
-  SDL_RenderFillRect(ren, &rect);
+void Argon::triangle(double x1, double y1, double x2, double y2, double x3, double y3) {
+  Vec2 a(x1,y1);
+  Vec2 b(x2,y2);
+  Vec2 c(x3,y3);
+  //http://www-users.mat.uni.torun.pl/~wrona/3d_tutor/tri_fillers.html
+
+  //Sort points by y values (top to bottom)
+  if()
+  the coordinates of vertices are (A.x,A.y), (B.x,B.y), (C.x,C.y); we assume that A.y<=B.y<=C.y (you should sort them first)
+  dx1,dx2,dx3 are deltas used in interpolation
+  horizline draws horizontal segment with coordinates (S.x,Y), (E.x,Y)
+  S.x, E.x are left and right x-coordinates of the segment we have to draw
+  S=A means that S.x=A.x; S.y=A.y;
+  *** begin triangle filler ***
+
+  	if (B.y-A.y > 0) dx1=(B.x-A.x)/(B.y-A.y) else dx1=0;
+  	if (C.y-A.y > 0) dx2=(C.x-A.x)/(C.y-A.y) else dx2=0;
+  	if (C.y-B.y > 0) dx3=(C.x-B.x)/(C.y-B.y) else dx3=0;
+
+  	S=E=A;
+  	if(dx1 > dx2) {
+  		for(;S.y<=B.y;S.y++,E.y++,S.x+=dx2,E.x+=dx1)
+  			horizline(S.x,E.x,S.y,color);
+  		E=B;
+  		for(;S.y<=C.y;S.y++,E.y++,S.x+=dx2,E.x+=dx3)
+  			horizline(S.x,E.x,S.y,color);
+  	} else {
+  		for(;S.y<=B.y;S.y++,E.y++,S.x+=dx1,E.x+=dx2)
+  			horizline(S.x,E.x,S.y,color);
+  		S=B;
+  		for(;S.y<=C.y;S.y++,E.y++,S.x+=dx3,E.x+=dx2)
+  			horizline(S.x,E.x,S.y,color);
+  	}
+
+  *** end triangle filler ***
 }
-ImageData Argon::getImageData() {
-  return getImageData(0,0,w,h);
-}
-ImageData Argon::getImageData(int x,int y,int w,int h) {
-  SDL_Surface* surface = SDL_GetWindowSurface(win);
-  if(SDL_MUSTLOCK(surface)){SDL_LockSurface(surface);}
-  SDL_Rect rect = {x,y,w,h};
-  int pitch = w*surface->format->BytesPerPixel;
-  int size = h*pitch;
-  uint8_t* data = (uint8_t*)malloc(size);
-  SDL_RenderReadPixels(ren, &rect, SDL_PIXELFORMAT_RGBA32, surface->pixels, pitch);
-  uint8_t* pixels = (uint8_t*)surface->pixels;
-  for(int i = 0;i < size;++i) {
-    uint32_t pixel = pixels[i];
-    data[i] = (uint8_t)pixel;
-    cout << (uint32_t)pixel << endl;
-  }
-  if(SDL_MUSTLOCK(surface)){SDL_UnlockSurface(surface);}
-  SDL_FreeSurface(surface);
-  return data;
-}
-void Argon::putImageData(ImageData data) {
+void Argon::polygon(std::vector<double> points) {
 
 }
-void Argon::screenshot() {
-  return screenshot(0,0,w,h);
-}
-void Argon::screenshot(int x,int y,int w,int h) {
-  SDL_Surface *surface = SDL_CreateRGBSurface(0, w, h, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
-  SDL_Rect rect = {x,y,w,h};
-  SDL_RenderReadPixels(ren, &rect, SDL_PIXELFORMAT_RGBA32, surface->pixels, w*surface->format->BytesPerPixel);
-  IMG_SavePNG(surface, "screenshot.png");
-  SDL_FreeSurface(surface);
+void Argon::rect(double x1, double y1, double x2, double y2) {
+  SDL_Rect rect = {x1,y1,x2,y2};
+  SDL_RenderFillRect(ren, &rect);
 }
 
 

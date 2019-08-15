@@ -88,7 +88,7 @@ void eventHandler(Argon* argon, Event e) {
 		default: break;
 	}
 }
-void program(Argon* argon) {
+void loop(Argon* argon) {
 
 }
 int main(int argc, char* argv[]) {
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
 	 						60,											//FPS
 							ARGON_BASIC|ARGON_RESIZEABLE,						//FLAGS
 							&eventHandler,
-							&program
+							&loop
 						);
 	return 0;
 }
