@@ -168,7 +168,6 @@ private:
 
 	//Hidden Functions
 	void init(int x, int y, int w, int h, int flags);
-	void loop();
 	Listeners* getListeners(EventType type);
 	static int eventWatcher(void* data, SDL_Event* e);
 	void eventHandler(Event* event, Listeners* listeners);
@@ -176,6 +175,7 @@ private:
 public:
 	const char* name;
 	bool running = false;
+	int dblClickTime = 400;
 	Window window = {-1, -1, -1, -1, -1, -1, 0};
 	Mouse mouse = {0,0,0,false};
 	Keyboard keyboard = {-1,"",false,false,false,false,false,false,false,false,false,false,false,false,false,false};
@@ -186,6 +186,7 @@ public:
 	Argon(const char* name, int x, int y, int w, int h, int fps, int flags);
 	~Argon();
 
+	void start();
 	void addListener(EventType type, Listener listener);
 	bool removeListener(EventType type, Listener listener);
 	void setFps(int _fps);

@@ -30,10 +30,9 @@ void Argon::init(int x,int y,int w,int h,int flags) {
   SDL_AddEventWatch(eventWatcher, this);
   running = true;
   frameTime = 1000 / fps;
-  loop();
 }
 
-void Argon::loop() {
+void Argon::start() {
   uint32_t time = SDL_GetTicks();
   SDL_Event e;
   while(running) {
@@ -57,6 +56,7 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
   Argon* a = ((Argon*)data);
   switch(e->type) {
     case SDL_QUIT: {
+      a->window.shown = false;
       WindowEvent event = {
         QUIT,
         a->window.x,
@@ -71,9 +71,284 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
       a->running = false;
       break;
     }
+    case SDL_WINDOWEVENT: {
+      switch (e->window.event) {
+        case SDL_WINDOWEVENT_CLOSE: {
+          a->window.shown = false;
+          WindowEvent event = {
+            CLOSE,
+            a->window.x,
+            a->window.y,
+            a->window.w,
+            a->window.h,
+            a->window.dw,
+            a->window.dh,
+            a->window.shown
+          };
+          a->eventHandler(&event,&a->closeListeners);
+          break;
+        }
+        case SDL_WINDOWEVENT_SHOWN: {
+          a->window.shown = true;
+          WindowEvent event = {
+            SHOWN,
+            a->window.x,
+            a->window.y,
+            a->window.w,
+            a->window.h,
+            a->window.dw,
+            a->window.dh,
+            a->window.shown
+          };
+          a->eventHandler(&event,&a->shownListeners);
+          break;
+        }
+        case SDL_WINDOWEVENT_HIDDEN: {
+          a->window.shown = false;
+          WindowEvent event = {
+            HIDDEN,
+            a->window.x,
+            a->window.y,
+            a->window.w,
+            a->window.h,
+            a->window.dw,
+            a->window.dh,
+            a->window.shown
+          };
+          a->eventHandler(&event,&a->hiddenListeners);
+          break;
+        }
+        case SDL_WINDOWEVENT_EXPOSED: {
+          a->window.shown = true;
+          WindowEvent event = {
+            EXPOSED,
+            a->window.x,
+            a->window.y,
+            a->window.w,
+            a->window.h,
+            a->window.dw,
+            a->window.dh,
+            a->window.shown
+          };
+          a->eventHandler(&event,&a->exposedListeners);
+          break;
+        }
+        case SDL_WINDOWEVENT_MOVED: {
+          a->window.x = e->window.data1;
+          a->window.y = e->window.data2;
+          WindowEvent event = {
+            MOVED,
+            a->window.x,
+            a->window.y,
+            a->window.w,
+            a->window.h,
+            a->window.dw,
+            a->window.dh,
+            a->window.shown
+          };
+          a->eventHandler(&event,&a->movedListeners);
+          break;
+        }
+        case SDL_WINDOWEVENT_RESIZED: {
+          SDL_GetWindowPosition(a->win,&a->window.x,&a->window.y);
+          SDL_GetRendererOutputSize(a->ren, &a->window.w, &a->window.h);
+          SDL_GL_GetDrawableSize(a->win, &a->window.dw, &a->window.dh);
+          WindowEvent event = {
+            RESIZED,
+            a->window.x,
+            a->window.y,
+            a->window.w,
+            a->window.h,
+            a->window.dw,
+            a->window.dh,
+            a->window.shown
+          };
+          a->eventHandler(&event,&a->resizedListeners);
+          break;
+        }
+        case SDL_WINDOWEVENT_SIZE_CHANGED: {
+          SDL_GetWindowPosition(a->win,&a->window.x,&a->window.y);
+          SDL_GetRendererOutputSize(a->ren, &a->window.w, &a->window.h);
+          SDL_GL_GetDrawableSize(a->win, &a->window.dw, &a->window.dh);
+          WindowEvent event = {
+            SIZECHANGED,
+            a->window.x,
+            a->window.y,
+            a->window.w,
+            a->window.h,
+            a->window.dw,
+            a->window.dh,
+            a->window.shown
+          };
+          a->eventHandler(&event,&a->sizeChangedListeners);
+          break;
+        }
+        case SDL_WINDOWEVENT_MINIMIZED: {
+          a->window.shown = false;
+          WindowEvent event = {
+            MINIMIZED,
+            a->window.x,
+            a->window.y,
+            a->window.w,
+            a->window.h,
+            a->window.dw,
+            a->window.dh,
+            a->window.shown
+          };
+          a->eventHandler(&event,&a->minimizedListeners);
+          break;
+        }
+        case SDL_WINDOWEVENT_MAXIMIZED: {
+          a->window.shown = true;
+          WindowEvent event = {
+            MINIMIZED,
+            a->window.x,
+            a->window.y,
+            a->window.w,
+            a->window.h,
+            a->window.dw,
+            a->window.dh,
+            a->window.shown
+          };
+          a->eventHandler(&event,&a->maximizedListeners);
+          break;
+        }
+        case SDL_WINDOWEVENT_RESTORED: {
+          WindowEvent event = {
+            RESTORED,
+            a->window.x,
+            a->window.y,
+            a->window.w,
+            a->window.h,
+            a->window.dw,
+            a->window.dh,
+            a->window.shown
+          };
+          a->eventHandler(&event,&a->restoredListeners);
+          break;
+        }
+        case SDL_WINDOWEVENT_FOCUS_GAINED: {
+          WindowEvent event = {
+            KEYBOARDFOCUS,
+            a->window.x,
+            a->window.y,
+            a->window.w,
+            a->window.h,
+            a->window.dw,
+            a->window.dh,
+            a->window.shown
+          };
+          a->eventHandler(&event,&a->keyboardFocusListeners);
+          break;
+        }
+        case SDL_WINDOWEVENT_FOCUS_LOST: {
+          WindowEvent event = {
+            KEYBOARDBLUR,
+            a->window.x,
+            a->window.y,
+            a->window.w,
+            a->window.h,
+            a->window.dw,
+            a->window.dh,
+            a->window.shown
+          };
+          a->eventHandler(&event,&a->keyboardBlurListeners);
+          break;
+        }
+        case SDL_WINDOWEVENT_TAKE_FOCUS: {
+          WindowEvent event = {
+            TAKEFOCUS,
+            a->window.x,
+            a->window.y,
+            a->window.w,
+            a->window.h,
+            a->window.dw,
+            a->window.dh,
+            a->window.shown
+          };
+          a->eventHandler(&event,&a->takeFocusListeners);
+          break;
+        }
+        case SDL_WINDOWEVENT_HIT_TEST: {
+          WindowEvent event = {
+            HITTEST,
+            a->window.x,
+            a->window.y,
+            a->window.w,
+            a->window.h,
+            a->window.dw,
+            a->window.dh,
+            a->window.shown
+          };
+          a->eventHandler(&event,&a->hitTestListeners);
+          break;
+        }
+      }
+      case SDL_WINDOWEVENT_ENTER: {
+        SDL_GetMouseState(&a->mouse.x, &a->mouse.y);
+        MouseEvent event = {
+          MOUSEENTER, 
+          a->mouse.x,
+          a->mouse.y,
+          a->mouse.down,
+          a->mouse.which
+        };
+        a->eventHandler(&event,&a->mouseEnterListeners);
+        break;
+      }
+      case SDL_WINDOWEVENT_LEAVE: {
+        SDL_GetMouseState(&a->mouse.x, &a->mouse.y);
+        MouseEvent event = {
+          MOUSELEAVE, 
+          a->mouse.x,
+          a->mouse.y,
+          a->mouse.down,
+          a->mouse.which
+        };
+        a->eventHandler(&event,&a->mouseLeaveListeners);
+        break;
+      }
+    }
+    case SDL_MOUSEBUTTONUP: {
+      SDL_GetMouseState(&a->mouse.x, &a->mouse.y);
+      a->mouse.which = e->button.button;
+      a->mouse.down = false;
+      MouseEvent event = {
+        MOUSEUP, 
+        a->mouse.x,
+        a->mouse.y,
+        false,
+        a->mouse.which
+      };
+      a->eventHandler(&event,&a->mouseUpListeners);
+      if(a->canCountClick) {
+        a->canCountClick = false;
+        MouseEvent event = {
+          CLICK, 
+          a->mouse.x,
+          a->mouse.y,
+          false,
+          a->mouse.which
+        };
+        a->eventHandler(&event,&a->clickListeners);
+        if(SDL_GetTicks() - a->lastClick < a->dblClickTime) {
+          MouseEvent event = {
+            DBLCLICK, 
+            a->mouse.x,
+            a->mouse.y,
+            false,
+            a->mouse.which
+          };          
+          a->eventHandler(&event,&a->dblclickListeners);
+        }
+        a->lastClick = SDL_GetTicks();
+      }
+      break;
+    }   
     case SDL_MOUSEBUTTONDOWN: {
       SDL_GetMouseState(&a->mouse.x, &a->mouse.y);
       a->mouse.which = e->button.button;
+      a->canCountClick = true;
       a->mouse.down = true;
       MouseEvent event = {
         MOUSEDOWN, 
@@ -85,6 +360,53 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
       a->eventHandler(&event,&a->mouseDownListeners);
       break;
     }
+    case SDL_MOUSEMOTION: {
+      SDL_GetMouseState(&a->mouse.x, &a->mouse.y);
+      MouseEvent event = {
+        MOUSEMOVE, 
+        a->mouse.x,
+        a->mouse.y,
+        a->mouse.down,
+        a->mouse.which
+      };
+      a->eventHandler(&event,&a->mouseMoveListeners);
+      break;    
+    }
+    case SDL_KEYUP: {
+      a->keyboard = {e->key.keysym.scancode,SDL_GetKeyName(e->key.keysym.sym),static_cast<bool>(KMOD_LSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_RSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_LCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_RCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_LALT & e->key.keysym.mod),static_cast<bool>(KMOD_RALT & e->key.keysym.mod),static_cast<bool>(KMOD_LGUI & e->key.keysym.mod),static_cast<bool>(KMOD_RGUI & e->key.keysym.mod),static_cast<bool>(KMOD_NUM & e->key.keysym.mod),static_cast<bool>(KMOD_CAPS & e->key.keysym.mod),static_cast<bool>(KMOD_CTRL & e->key.keysym.mod),static_cast<bool>(KMOD_SHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_ALT & e->key.keysym.mod),static_cast<bool>(KMOD_GUI & e->key.keysym.mod)};
+      KeyboardEvent event = {
+        KEYUP,e->key.keysym.scancode,SDL_GetKeyName(e->key.keysym.sym),static_cast<bool>(KMOD_LSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_RSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_LCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_RCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_LALT & e->key.keysym.mod),static_cast<bool>(KMOD_RALT & e->key.keysym.mod),static_cast<bool>(KMOD_LGUI & e->key.keysym.mod),static_cast<bool>(KMOD_RGUI & e->key.keysym.mod),static_cast<bool>(KMOD_NUM & e->key.keysym.mod),static_cast<bool>(KMOD_CAPS & e->key.keysym.mod),static_cast<bool>(KMOD_CTRL & e->key.keysym.mod),static_cast<bool>(KMOD_SHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_ALT & e->key.keysym.mod),static_cast<bool>(KMOD_GUI & e->key.keysym.mod)
+      };
+      a->eventHandler(&event,&a->keyUpListeners);
+      break;
+    }
+    case SDL_KEYDOWN: {
+      a->keyboard = {e->key.keysym.scancode,SDL_GetKeyName(e->key.keysym.sym),static_cast<bool>(KMOD_LSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_RSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_LCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_RCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_LALT & e->key.keysym.mod),static_cast<bool>(KMOD_RALT & e->key.keysym.mod),static_cast<bool>(KMOD_LGUI & e->key.keysym.mod),static_cast<bool>(KMOD_RGUI & e->key.keysym.mod),static_cast<bool>(KMOD_NUM & e->key.keysym.mod),static_cast<bool>(KMOD_CAPS & e->key.keysym.mod),static_cast<bool>(KMOD_CTRL & e->key.keysym.mod),static_cast<bool>(KMOD_SHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_ALT & e->key.keysym.mod),static_cast<bool>(KMOD_GUI & e->key.keysym.mod)};
+      KeyboardEvent event = {
+        KEYDOWN,e->key.keysym.scancode,SDL_GetKeyName(e->key.keysym.sym),static_cast<bool>(KMOD_LSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_RSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_LCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_RCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_LALT & e->key.keysym.mod),static_cast<bool>(KMOD_RALT & e->key.keysym.mod),static_cast<bool>(KMOD_LGUI & e->key.keysym.mod),static_cast<bool>(KMOD_RGUI & e->key.keysym.mod),static_cast<bool>(KMOD_NUM & e->key.keysym.mod),static_cast<bool>(KMOD_CAPS & e->key.keysym.mod),static_cast<bool>(KMOD_CTRL & e->key.keysym.mod),static_cast<bool>(KMOD_SHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_ALT & e->key.keysym.mod),static_cast<bool>(KMOD_GUI & e->key.keysym.mod)
+      };
+      a->eventHandler(&event,&a->keyDownListeners);
+      break;
+    }
+    case SDL_MOUSEWHEEL: {
+      WheelEvent event = {
+        MOUSEWHEEL,
+        e->wheel.x,
+        e->wheel.y,
+        static_cast<bool>(e->wheel.direction)
+      };
+      a->eventHandler(&event,&a->mouseWheelListeners);
+      break;
+    }
+    case SDL_DROPFILE: {
+      FileEvent event = {
+        DROPFILE,
+        e->drop.file,
+        e->drop.timestamp
+      };
+      a->eventHandler(&event,&a->dropFileListeners);
+      break;
+    } 
   }
 
   return 0;
