@@ -4,6 +4,7 @@
 #include <vector>
 #include <functional>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <iostream>
 
 using namespace std;
@@ -17,6 +18,7 @@ using namespace std;
 #define ARGON_MAXIMIZED 32
 #define ARGON_HIGHDPI 64
 #define ARGON_NOQUIT 128
+#define ARGON_IMAGES 256
 
 #define ARGON_BASIC 72
 
@@ -147,6 +149,29 @@ struct Argon_Color {
 	uint8_t g;
 	uint8_t b;
 	uint8_t a;
+	bool operator==(Argon_Color c) {
+		return r == c.r && g == c.g && b == c.b && a == c.a;
+	}
+	bool operator !=(Argon_Color c) {
+		return r != c.r || g != c.g || b != c.b || a != c.a;
+	}
+	Argon_Color operator+(Argon_Color c) {
+		r += c.r;
+		g += c.g;
+		b += c.b;
+		a += c.a;
+		return *this;
+	}
+	Argon_Color operator-(Argon_Color c) {
+		r -= c.r;
+		g -= c.g;
+		b -= c.b;
+		a -= c.a;
+		return *this;
+	}
+};
+struct Argon_Rect {
+	int x; int y; int w; int h;
 };
 
 typedef function<void(Argon&,WindowEvent&)> WindowListener;
@@ -165,12 +190,14 @@ private:
 	bool canCountClick = false;
 	bool quitOnClose = true;
 	bool skipCallstack = false;
+	bool useImages = false;
 	Argon_Color bg = {0,0,0,0};
 	Argon_Color fill = {255,255,255,255};
 	Argon_Color stroke = {255,255,255,255};
 	uint32_t lastClick;
 	SDL_Window* win;
 	SDL_Renderer* ren;
+	SDL_Surface* surface;
 
 	//Listeners
 	vector<WindowListener*> quitListeners;
@@ -214,6 +241,7 @@ public:
 	const char* name;
 	bool running = false;
 	int dblClickTime = 400;
+	string lastError = "";
 	Window window = {-1, -1, -1, -1, -1, -1, 0};
 	Mouse mouse = {0,0,0,0,0,0,0,false};
 	Keyboard keyboard = {-1,"",false,false,false,false,false,false,false,false,false,false,false,false,false,false};
@@ -242,7 +270,12 @@ public:
 	void clear(int x, int y, int w, int h);
 	void point(int x, int y);
 	void line(int x1, int y1, int x2, int y2);
+	void strokeCircle(int x, int y, int r);
+	void circle(int x, int y, int r);
 	void rect(int x, int y, int w, int h);
+	Argon_Rect image(const char* path, int x, int y);
+	Argon_Rect image(const char* path, int x, int y, int w, int h);
+	Argon_Rect image(const char* path, int sx, int sy, int sw, int sh, int dx, int dy,int dw,int dh);
 	void wait(int ms);
 	void setBackground(Argon_Color color);
 	void setBackground(int r, int g, int b, int a = 255);

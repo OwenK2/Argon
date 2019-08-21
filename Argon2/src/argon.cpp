@@ -25,14 +25,22 @@ void Argon::init(int x,int y,int w,int h,int flags) {
   if((flags >> 5) & 0x1) {sdl_flags |= SDL_WINDOW_MAXIMIZED;}
   if((flags >> 6) & 0x1) {sdl_flags |= SDL_WINDOW_ALLOW_HIGHDPI;}
   if((flags >> 7) & 0x1) {quitOnClose = false;}
+  if((flags >> 8) & 0x1) {useImages = true;}
 
   SDL_InitSubSystem(SDL_INIT_VIDEO);
+  if(useImages) {
+    int img_flags = IMG_INIT_JPG|IMG_INIT_PNG|IMG_INIT_TIF;
+    if((IMG_Init(img_flags) & img_flags) != img_flags) {
+      lastError = "Failed to init Image Library";
+    }
+  }
   win = SDL_CreateWindow(name,x,y,w,h,sdl_flags);
   ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE);
+  surface = SDL_GetWindowSurface(win);
   SDL_SetWindowTitle(win,name);
   SDL_GetRendererOutputSize(ren, &window.w, &window.h);
   SDL_GL_GetDrawableSize(win, &window.dw, &window.dh);
-  // SDL_AddEventWatch(eventWatcher, this);
+  SDL_AddEventWatch(eventWatcher, this);
   running = true;
   frameTime = 1000 / fps;
 }
@@ -75,9 +83,7 @@ void Argon::start() {
     else {
       SDL_Delay(time - now);
     }
-    while(SDL_PollEvent(&e)) {
-      eventWatcher(this,&e);
-    }
+    SDL_PollEvent(&e);
   }
 }
 
@@ -674,6 +680,82 @@ void Argon::rect(int x, int y, int w, int h) {
   });
   if(skipCallstack) {f(*this);}
   else {callstack.push_back(f);}
+}
+void Argon::circle(int cx, int cy, int r) {
+  function<void(Argon&)> f = ([=](Argon& a) {
+    int x = r;
+    int y = 0;
+    int err = 0;
+    SDL_SetRenderDrawColor(a.ren, a.fill.r, a.fill.g, a.fill.b, a.fill.a);
+    while (x >= y) {
+      SDL_RenderDrawLine(a.ren, cx-x, cy+y, cx+x, cy+y);
+      SDL_RenderDrawLine(a.ren, cx-y, cy+x, cx+y, cy+x);
+      SDL_RenderDrawLine(a.ren, cx-x, cy-y, cx+x, cy-y);
+      SDL_RenderDrawLine(a.ren, cx-y, cy-x, cx+y, cy-x);
+      if (err <= 0) {
+        y += 1;
+        err += 2*y + 1;
+      }
+     
+      if (err > 0) {
+        x -= 1;
+        err -= 2*x + 1;
+      }
+    }
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
+void Argon::strokeCircle(int cx, int cy, int r) {
+  function<void(Argon&)> f = ([=](Argon& a) {
+    int x = r;
+    int y = 0;
+    int err = 0;
+    SDL_SetRenderDrawColor(a.ren, a.stroke.r, a.stroke.g, a.stroke.b, a.stroke.a);
+    while (x >= y) {
+      SDL_RenderDrawPoint(a.ren,cx + x, cy + y);
+      SDL_RenderDrawPoint(a.ren,cx + y, cy + x);
+      SDL_RenderDrawPoint(a.ren,cx - y, cy + x);
+      SDL_RenderDrawPoint(a.ren,cx - x, cy + y);
+      SDL_RenderDrawPoint(a.ren,cx - x, cy - y);
+      SDL_RenderDrawPoint(a.ren,cx - y, cy - x);
+      SDL_RenderDrawPoint(a.ren,cx + y, cy - x);
+      SDL_RenderDrawPoint(a.ren,cx + x, cy - y);
+      if (err <= 0) {
+        y += 1;
+        err += 2*y + 1;
+      }
+     
+      if (err > 0) {
+        x -= 1;
+        err -= 2*x + 1;
+      }
+    }
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
+Argon_Rect Argon::image(const char* path, int sx, int sy, int sw, int sh, int dx, int dy,int dw, int dh) {
+  SDL_Surface* final;
+  SDL_Surface* initial = IMG_Load(path);
+  if(initial == NULL) {lastError = "Unable to optimize image " + string(path) + "! SDL Error: " + SDL_GetError();return {-1,-1,-1,-1};}
+  final = SDL_ConvertSurface(initial, surface->format, 0);
+  SDL_FreeSurface(initial);
+  if(sw < 0) {sw = final->w;}
+  if(sh < 0) {sh = final->h;}
+  if(dw < 0) {dw = final->w;}
+  if(dh < 0) {dh = final->h;}
+  SDL_Rect src = {sx,sy,sw,sh};
+  SDL_Rect dest = {dx,dy,dw,dh};
+  SDL_BlitScaled(final, &src, surface, &dest);
+  SDL_UpdateWindowSurface(win);
+  return {dx,dy,dw,dh};
+}
+Argon_Rect Argon::image(const char* path,int x, int y, int w, int h) {
+  return image(path,0,0,-1,-1,x,y,w,h);
+}
+Argon_Rect Argon::image(const char* path,int x, int y) {
+  return image(path,x,y,-1,-1,0,0,-1,-1);
 }
 void Argon::wait(int ms) {
   function<void(Argon&)> f = ([=](Argon& a) {
