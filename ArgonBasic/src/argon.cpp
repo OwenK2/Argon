@@ -255,12 +255,12 @@ void Argon::triangle(double x1, double y1, double x2, double y2, double x3, doub
 
   *** end triangle filler ***
 }
-void Argon::polygon(std::vector<double> points) {
-
-}
 void Argon::rect(double x1, double y1, double x2, double y2) {
   SDL_Rect rect = {x1,y1,x2,y2};
   SDL_RenderFillRect(ren, &rect);
+}
+void Argon::polygon(std::vector<double> points) {
+
 }
 
 
