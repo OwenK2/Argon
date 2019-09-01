@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
 	int w = 50;
 	argon.addLoop([&](Argon& a) {
 		a.clear();
-		a.image("/Users/owen/Downloads/jt7i1p6kt6x21.png", x,y,w,h);
+		a.image("/Users/michaelkuhn/Downloads/IMG_1504.JPG", x,y,w,h);
 	});
 	argon.addKeyboardListener(KEYDOWN, [&](Argon& a, KeyboardEvent& e) {
 		if(strcmp(e.key,"W") == 0) {y -= 3;}
