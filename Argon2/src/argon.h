@@ -2,10 +2,12 @@
 #define ARGON_H
 
 #include <vector>
+#include <algorithm>
 #include <functional>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <iostream>
+#include "polygon.h"
 
 using namespace std;
 
@@ -173,11 +175,6 @@ struct Argon_Color {
 struct Argon_Rect {
 	int x; int y; int w; int h;
 };
-struct Point {
-	int x;
-	int y;
-};
-typedef vector<Point> Points;
 
 typedef function<void(Argon&,WindowEvent&)> WindowListener;
 typedef function<void(Argon&,MouseEvent&)> MouseListener;

@@ -68,14 +68,14 @@ void Argon::start() {
     if(time <= now) {
       while(time <= now  && (maxBehind--)) {
         skipCallstack = true;
-        for(auto it = tasklist.begin(); it != tasklist.end(); ++it) {
-          (*it)(*this);
+        for(int i = 0;i < tasklist.size();++i) {
+          tasklist[i](*this);
         }
         skipCallstack = false;
-        for(auto it = callstack.begin(); it != callstack.end(); ++it) {
-          (*it)(*this);
-          callstack.erase(it--);
+        for(int i = 0;i < callstack.size();++i) {
+          callstack[i](*this);
         }
+        callstack.clear();
         time += frameTime;
       }
       SDL_RenderPresent(ren);
@@ -736,17 +736,61 @@ void Argon::strokeCircle(int cx, int cy, int r) {
   else {callstack.push_back(f);}
 }
 void Argon::polygon(Points& points) {
+  int top = 2000000000;
+  int bottom = -2000000000;
+  int left = 2000000000;
+  int right = -2000000000;
+  for(auto pt : points) {
+    cout << "\e[32m(" << pt.x << ", " << pt.y << ")\e[0m" << endl;
+    if(pt.y < top) {top = pt.y;}
+    else if(pt.y > bottom) {bottom = pt.y;}
+    if(pt.x > right) {right = pt.x;}
+    else if(pt.x < left) {left = pt.x;}
+  }
+  function<void(Argon&)> f = ([=](Argon& a) {
+    Polygon p(points);
+
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+  // int  nodes, nodeX[MAX_POLY_CORNERS], pixelX, pixelY, i, j, swap ;
+
+  // //  Loop through the rows of the image.
+  // for (pixelY=IMAGE_TOP; pixelY<IMAGE_BOT; pixelY++) {
+
+  //   //  Build a list of nodes.
+  //   nodes=0; j=polyCorners-1;
+  //   for (i=0; i<polyCorners; i++) {
+  //     if (polyY[i]<(double) pixelY && polyY[j]>=(double) pixelY
+  //     ||  polyY[j]<(double) pixelY && polyY[i]>=(double) pixelY) {
+  //       nodeX[nodes++]=(int) (polyX[i]+(pixelY-polyY[i])/(polyY[j]-polyY[i])
+  //       *(polyX[j]-polyX[i])); }
+  //     j=i; }
+
+  //   //  Sort the nodes, via a simple “Bubble” sort.
+  //   i=0;
+  //   while (i<nodes-1) {
+  //     if (nodeX[i]>nodeX[i+1]) {
+  //       swap=nodeX[i]; nodeX[i]=nodeX[i+1]; nodeX[i+1]=swap; if (i) i--; }
+  //     else {
+  //       i++; }}
+//  Fill the pixels between node pairs.
+// for (i=0; i<nodes; i+=2) {
+//   if   (nodeX[i  ]>=IMAGE_RIGHT) break;
+//   if   (nodeX[i+1]> IMAGE_LEFT ) {
+//     if (nodeX[i  ]< IMAGE_LEFT ) nodeX[i  ]=IMAGE_LEFT ;
+//     if (nodeX[i+1]> IMAGE_RIGHT) nodeX[i+1]=IMAGE_RIGHT;
+//     for (pixelX=nodeX[i]; pixelX<nodeX[i+1]; pixelX++) fillPixel(pixelX,pixelY); }}}
 
 }
 void Argon::strokePolygon(Points& points) {
   if(points.size() < 3) {return;}
-  function<void(Argon&)> f = ([&](Argon& a) {
+  function<void(Argon&)> f = ([=](Argon& a) {
     SDL_SetRenderDrawColor(a.ren, a.stroke.r, a.stroke.g, a.stroke.b, a.stroke.a);
     for(auto it = points.begin()+1;it != points.end();++it) {
-      // line((*(it-1)).x,(*(it-1)).y,(*it).x,(*it).y);
-      Point pt = *it;
-      cout << pt.x << ", " << pt.y;
+      a.line((it-1)->x,(it-1)->y,it->x,it->y);
     }
+    a.line(points.back().x,points.back().y,points.begin()->x,points.begin()->y);
   });
   if(skipCallstack) {f(*this);}
   else {callstack.push_back(f);}
