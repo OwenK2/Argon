@@ -29,6 +29,14 @@ int main(int argc, char* argv[]) {
 		a.polygon(pts);
 		a.strokePolygon(pts);
 	});
+	// argon.addMouseListener(CLICK, [](Argon& a, Event& e) {
+	// 	Points pts;
+	// 	pts.push_back({0,0});
+	// 	pts.push_back({100,100});
+	// 	pts.push_back({0,100});
+	// 	a.strokePolygon(pts);
+	//
+	// });
 	argon.start();
 	return 0;
 }
