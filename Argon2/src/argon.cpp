@@ -2,6 +2,8 @@
 using namespace std;
 
 
+//Argon
+
 Argon::Argon(const char* _name, int _fps, int _flags) : name(_name), fps(_fps) {
   init(SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,500,500,_flags);
 }
@@ -45,6 +47,9 @@ void Argon::init(int x,int y,int w,int h,int flags) {
   frameTime = 1000 / fps;
 }
 void Argon::quit() {
+  for(auto img : imageCache) {
+    delete img;
+  }
   running = false;
   SDL_DelEventWatch(eventWatcher,this);
   SDL_DestroyRenderer(ren);
@@ -340,7 +345,7 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
           a->mouse.wdown = state&(SDL_PRESSED<<4);
           a->mouse.down = a->mouse.ldown|a->mouse.mdown|a->mouse.rdown;
           MouseEvent event = {
-            MOUSEENTER, 
+            MOUSEENTER,
             a->mouse.x,
             a->mouse.y,
             a->mouse.down,
@@ -362,7 +367,7 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
           a->mouse.wdown = state&(SDL_PRESSED<<4);
           a->mouse.down = a->mouse.ldown|a->mouse.mdown|a->mouse.rdown;
           MouseEvent event = {
-            MOUSELEAVE, 
+            MOUSELEAVE,
             a->mouse.x,
             a->mouse.y,
             a->mouse.down,
@@ -386,7 +391,7 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
       a->mouse.down = a->mouse.ldown|a->mouse.mdown|a->mouse.rdown;
       a->mouse.which = e->button.button;
       MouseEvent event = {
-        MOUSEUP, 
+        MOUSEUP,
         a->mouse.x,
         a->mouse.y,
         a->mouse.down,
@@ -400,7 +405,7 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
       if(a->canCountClick) {
         a->canCountClick = false;
         MouseEvent event = {
-          CLICK, 
+          CLICK,
           a->mouse.x,
           a->mouse.y,
           a->mouse.down,
@@ -413,7 +418,7 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
         for(auto it = a->clickListeners.begin(); it != a->clickListeners.end(); ++it) {(**it)(*a,event);}
         if(SDL_GetTicks() - a->lastClick < a->dblClickTime) {
           MouseEvent event = {
-            DBLCLICK, 
+            DBLCLICK,
             a->mouse.x,
             a->mouse.y,
             a->mouse.down,
@@ -422,13 +427,13 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
             a->mouse.rdown,
             a->mouse.wdown,
             a->mouse.which
-          };          
+          };
           for(auto it = a->dblclickListeners.begin(); it != a->dblclickListeners.end(); ++it) {(**it)(*a,event);}
         }
         a->lastClick = SDL_GetTicks();
       }
       break;
-    }   
+    }
     case SDL_MOUSEBUTTONDOWN: {
       uint32_t state = SDL_GetMouseState(&a->mouse.x, &a->mouse.y);
       a->mouse.ldown = state&SDL_PRESSED;
@@ -439,7 +444,7 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
       a->mouse.which = e->button.button;
       a->canCountClick = true;
       MouseEvent event = {
-        MOUSEDOWN, 
+        MOUSEDOWN,
         a->mouse.x,
         a->mouse.y,
         a->mouse.down,
@@ -460,7 +465,7 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
       a->mouse.wdown = state&(SDL_PRESSED<<4);
       a->mouse.down = a->mouse.ldown|a->mouse.mdown|a->mouse.rdown;
       MouseEvent event = {
-        MOUSEMOVE, 
+        MOUSEMOVE,
         a->mouse.x,
         a->mouse.y,
         a->mouse.down,
@@ -471,7 +476,7 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
         a->mouse.which
       };
       for(auto it = a->mouseMoveListeners.begin(); it != a->mouseMoveListeners.end(); ++it) {(**it)(*a,event);}
-      break;    
+      break;
     }
     case SDL_KEYUP: {
       a->keyboard = {e->key.keysym.scancode,SDL_GetKeyName(e->key.keysym.sym),static_cast<bool>(KMOD_LSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_RSHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_LCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_RCTRL & e->key.keysym.mod),static_cast<bool>(KMOD_LALT & e->key.keysym.mod),static_cast<bool>(KMOD_RALT & e->key.keysym.mod),static_cast<bool>(KMOD_LGUI & e->key.keysym.mod),static_cast<bool>(KMOD_RGUI & e->key.keysym.mod),static_cast<bool>(KMOD_NUM & e->key.keysym.mod),static_cast<bool>(KMOD_CAPS & e->key.keysym.mod),static_cast<bool>(KMOD_CTRL & e->key.keysym.mod),static_cast<bool>(KMOD_SHIFT & e->key.keysym.mod),static_cast<bool>(KMOD_ALT & e->key.keysym.mod),static_cast<bool>(KMOD_GUI & e->key.keysym.mod)};
@@ -507,7 +512,7 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
       };
       for(auto it = a->dropFileListeners.begin(); it != a->dropFileListeners.end(); ++it) {(**it)(*a,event);}
       break;
-    } 
+    }
   }
 
   return 0;
@@ -696,7 +701,7 @@ void Argon::circle(int cx, int cy, int r) {
         y += 1;
         err += 2*y + 1;
       }
-     
+
       if (err > 0) {
         x -= 1;
         err -= 2*x + 1;
@@ -725,7 +730,7 @@ void Argon::strokeCircle(int cx, int cy, int r) {
         y += 1;
         err += 2*y + 1;
       }
-     
+
       if (err > 0) {
         x -= 1;
         err -= 2*x + 1;
@@ -796,26 +801,41 @@ void Argon::strokePolygon(Points& points) {
   else {callstack.push_back(f);}
 }
 Argon_Rect Argon::image(const char* path, int sx, int sy, int sw, int sh, int dx, int dy,int dw, int dh) {
-  SDL_Surface* final;
-  SDL_Surface* initial = IMG_Load(path);
-  if(initial == NULL) {lastError = "Unable to optimize image " + string(path) + "! SDL Error: " + SDL_GetError();return {-1,-1,-1,-1};}
-  final = SDL_ConvertSurface(initial, surface->format, 0);
-  SDL_FreeSurface(initial);
-  if(sw < 0) {sw = final->w;}
-  if(sh < 0) {sh = final->h;}
-  if(dw < 0) {dw = final->w;}
-  if(dh < 0) {dh = final->h;}
-  SDL_Rect src = {sx,sy,sw,sh};
-  SDL_Rect dest = {dx,dy,dw,dh};
-  SDL_BlitScaled(final, &src, surface, &dest);
-  SDL_UpdateWindowSurface(win);
-  return {dx,dy,dw,dh};
+  auto it = find_if(imageCache.begin(),imageCache.end(), [=](const CachedImage* obj) {
+    return strcmp(obj->path, path) == 0;
+  });
+  if(it == imageCache.end()) {
+    CachedImage* img = new CachedImage(*this,path);
+    imageCache.push_back(img);
+    return img->draw(sx,sy,sw,sh,dx,dy,dw,dh);
+  }
+  else {
+    return (*it)->draw(sx,sy,sw,sh,dx,dy,dw,dh);
+  }
+  //if not create one
+  //if so draw using sx...
+
+
+  // SDL_Surface* final;
+  // SDL_Surface* initial = IMG_Load(path);
+  // if(initial == NULL) {lastError = "Unable to optimize image " + string(path) + "! SDL Error: " + SDL_GetError();return {-1,-1,-1,-1};}
+  // final = SDL_ConvertSurface(initial, surface->format, 0);
+  // SDL_FreeSurface(initial);
+  // if(sw < 0) {sw = final->w;}
+  // if(sh < 0) {sh = final->h;}
+  // if(dw < 0) {dw = final->w;}
+  // if(dh < 0) {dh = final->h;}
+  // SDL_Rect src = {sx,sy,sw,sh};
+  // SDL_Rect dest = {dx,dy,dw,dh};
+  // SDL_BlitScaled(final, &src, surface, &dest);
+  // SDL_UpdateWindowSurface(win);
+  // return {dx,dy,dw,dh};
 }
 Argon_Rect Argon::image(const char* path,int x, int y, int w, int h) {
   return image(path,0,0,-1,-1,x,y,w,h);
 }
 Argon_Rect Argon::image(const char* path,int x, int y) {
-  return image(path,x,y,-1,-1,0,0,-1,-1);
+  return image(path,0,0,-1,-1,x,y,-1,-1);
 }
 void Argon::wait(int ms) {
   function<void(Argon&)> f = ([=](Argon& a) {
@@ -830,3 +850,43 @@ void Argon::messageBox(const char* title,const char* message, uint32_t flags) {
   });
   if(skipCallstack) {f(*this);}
   else {callstack.push_back(f);}}
+
+
+
+
+
+
+
+//Friend Classes
+
+
+//Cached Image
+
+CachedImage::CachedImage(Argon& a, const char* path) : argon(a), path(path) {
+  SDL_Surface* initial = IMG_Load(path);
+  if(initial == NULL) {argon.lastError = "Unable to optimize image " + string(path) + "! SDL Error: " + SDL_GetError();return;}
+  img = SDL_ConvertSurface(initial, argon.surface->format, 0);
+  SDL_FreeSurface(initial);
+};
+CachedImage::~CachedImage() {
+  remove();
+};
+Argon_Rect CachedImage::draw(int sx, int sy, int sw, int sh, int dx, int dy,int dw, int dh) {
+  if(sw < 0) {sw = img->w;}
+  if(sh < 0) {sh = img->h;}
+  if(dw < 0) {dw = img->w;}
+  if(dh < 0) {dh = img->h;}
+  SDL_Rect src = {sx,sy,sw,sh};
+  SDL_Rect dest = {dx,dy,dw,dh};
+  SDL_BlitScaled(img, &src, argon.surface, &dest);
+  SDL_UpdateWindowSurface(argon.win);
+  return {dx,dy,dw,dh};
+}
+
+void CachedImage::remove() {
+  auto it = find(argon.imageCache.begin(),argon.imageCache.end(),this);
+  if(it != argon.imageCache.end()) {
+    argon.imageCache.erase(it);
+  }
+  SDL_FreeSurface(img);
+}

@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
 			y -= 3;
 		}
 		if(arrowkey[1]) {
-			x -= 2;
+			x -= 3;
 		}
 		if(arrowkey[2]) {
 			y += 3;
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
 		if(arrowkey[3]) {
 			x += 3;
 		}
-		a.image("/Users/michaelkuhn/Downloads/IMG_1504.JPG", x,y,w,h);
+		a.image("/Users/owen/Documents/Coding/landing/midground.png", x,y,w,h);
 	});
 	argon.addKeyboardListener(KEYDOWN, [&](Argon& a, KeyboardEvent& e) {
 		if(strcmp(e.key,"W") == 0) {arrowkey[0] = true;}
@@ -39,14 +39,6 @@ int main(int argc, char* argv[]) {
 		if(strcmp(e.key,"A") == 0) {arrowkey[1] = false;}
 		if(strcmp(e.key,"S") == 0) {arrowkey[2] = false;}
 		if(strcmp(e.key,"D") == 0) {arrowkey[3] = false;}
-	});
-	argon.addMouseListener(CLICK, [](Argon& a, MouseEvent& e) {
-		Points pts;
-		pts.push_back({static_cast<int>(e.x + 30*cos(0)),static_cast<int>(e.y + 30*sin(0))});
-		pts.push_back({static_cast<int>(e.x + 30*cos(3*M_PI_4)),static_cast<int>(e.y + 30*sin(3*M_PI_4))});
-		pts.push_back({static_cast<int>(e.x + 30*cos(-3*M_PI_4)),static_cast<int>(e.y + 30*sin(-3*M_PI_4))});
-		a.polygon(pts);
-		a.strokePolygon(pts);
 	});
 	// argon.addMouseListener(CLICK, [](Argon& a, Event& e) {
 	// 	Points pts;

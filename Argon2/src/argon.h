@@ -30,6 +30,7 @@ using namespace std;
 #define ARGON_MESSAGE_INFO SDL_MESSAGEBOX_INFORMATION
 
 class Argon;
+class CachedImage;
 
 enum EventType {
 	QUIT,
@@ -116,7 +117,7 @@ struct Keyboard {
 	bool ctrl;
 	bool shift;
 	bool alt;
-	bool meta;	
+	bool meta;
 };
 struct KeyboardEvent : Event {
 	int keyCode;
@@ -229,15 +230,20 @@ private:
 	vector<WheelListener*> mouseWheelListeners;
 	vector<FileListener*> dropFileListeners;
 
+	//Cache
+	vector<CachedImage*> imageCache;
+
 	//Tasklist
 	Tasklist tasklist;
 	Tasklist callstack;
 
-	
+
 
 	//Hidden Functions
 	void init(int x, int y, int w, int h, int flags);
 	static int eventWatcher(void* data, SDL_Event* e);
+
+	friend class CachedImage;
 
 public:
 	const char* name;
@@ -290,5 +296,19 @@ public:
 	void messageBox(const char* title,const char* message, uint32_t flags = ARGON_MESSAGE_INFO);
 };
 
+
+//Friend Classes
+
+class CachedImage {
+public:
+	const char* path;
+	SDL_Surface* img;
+	Argon& argon;
+
+	CachedImage(Argon& a, const char* path);
+	~CachedImage();
+	Argon_Rect draw(int sx, int sy, int sw, int sh, int dx, int dy,int dw, int dh);
+	void remove();
+};
 
 #endif
