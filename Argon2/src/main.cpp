@@ -18,14 +18,15 @@ int main(int argc, char* argv[]) {
 		if(strcmp(e.key,"A") == 0) {x -= 3;}
 		if(strcmp(e.key,"S") == 0) {y += 3;}
 		if(strcmp(e.key,"D") == 0) {x += 3;}
-	argon.addMouseListener(CLICK, [](Argon& a, Event& e) {
-		Points pts;
-		pts.push_back({0,0});
-		pts.push_back({100,100});
-		pts.push_back({0,100});
-		a.strokePolygon(pts);
-
 	});
+	// argon.addMouseListener(CLICK, [](Argon& a, Event& e) {
+	// 	Points pts;
+	// 	pts.push_back({0,0});
+	// 	pts.push_back({100,100});
+	// 	pts.push_back({0,100});
+	// 	a.strokePolygon(pts);
+	//
+	// });
 	argon.start();
 	return 0;
 }
