@@ -173,6 +173,11 @@ struct Argon_Color {
 struct Argon_Rect {
 	int x; int y; int w; int h;
 };
+struct Point {
+	int x;
+	int y;
+};
+typedef vector<Point> Points;
 
 typedef function<void(Argon&,WindowEvent&)> WindowListener;
 typedef function<void(Argon&,MouseEvent&)> MouseListener;
@@ -273,6 +278,8 @@ public:
 	void strokeCircle(int x, int y, int r);
 	void circle(int x, int y, int r);
 	void rect(int x, int y, int w, int h);
+	void polygon(Points& points);
+	void strokePolygon(Points& points);
 	Argon_Rect image(const char* path, int x, int y);
 	Argon_Rect image(const char* path, int x, int y, int w, int h);
 	Argon_Rect image(const char* path, int sx, int sy, int sw, int sh, int dx, int dy,int dw,int dh);

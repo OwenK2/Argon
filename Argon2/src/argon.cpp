@@ -403,7 +403,7 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
           CLICK, 
           a->mouse.x,
           a->mouse.y,
-          false,
+          a->mouse.down,
           a->mouse.ldown,
           a->mouse.mdown,
           a->mouse.rdown,
@@ -416,7 +416,7 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
             DBLCLICK, 
             a->mouse.x,
             a->mouse.y,
-            false,
+            a->mouse.down,
             a->mouse.ldown,
             a->mouse.mdown,
             a->mouse.rdown,
@@ -730,6 +730,22 @@ void Argon::strokeCircle(int cx, int cy, int r) {
         x -= 1;
         err -= 2*x + 1;
       }
+    }
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
+void Argon::polygon(Points& points) {
+
+}
+void Argon::strokePolygon(Points& points) {
+  if(points.size() < 3) {return;}
+  function<void(Argon&)> f = ([&](Argon& a) {
+    SDL_SetRenderDrawColor(a.ren, a.stroke.r, a.stroke.g, a.stroke.b, a.stroke.a);
+    for(auto it = points.begin()+1;it != points.end();++it) {
+      // line((*(it-1)).x,(*(it-1)).y,(*it).x,(*it).y);
+      Point pt = *it;
+      cout << pt.x << ", " << pt.y;
     }
   });
   if(skipCallstack) {f(*this);}
