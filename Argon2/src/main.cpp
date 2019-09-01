@@ -14,19 +14,19 @@ int main(int argc, char* argv[]) {
 	bool arrowkey[4];
 	argon.addLoop([&](Argon& a) {
 		a.clear();
-		if(arrowkey[0]) {
+		if(a.keyboard.state[SDL_SCANCODE_UP]) {
 			y -= 3;
 		}
-		if(arrowkey[1]) {
+		if(a.keyboard.state[SDL_SCANCODE_LEFT]) {
 			x -= 3;
 		}
-		if(arrowkey[2]) {
+		if(a.keyboard.state[SDL_SCANCODE_DOWN]) {
 			y += 3;
 		}
-		if(arrowkey[3]) {
+		if(a.keyboard.state[SDL_SCANCODE_RIGHT]) {
 			x += 3;
 		}
-		a.image("/Users/owen/Documents/Coding/landing/midground.png", x,y,w,h);
+		a.image("/Users/owen/Documents/Coding/landing/midground.png", x,y);
 	});
 	argon.addKeyboardListener(KEYDOWN, [&](Argon& a, KeyboardEvent& e) {
 		if(strcmp(e.key,"W") == 0) {arrowkey[0] = true;}

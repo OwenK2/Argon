@@ -104,6 +104,9 @@ struct MouseEvent : Event {
 struct Keyboard {
 	int keyCode;
 	const char* key;
+
+	const uint8_t* state;
+
 	bool lshift;
 	bool rshift;
 	bool lctrl;
@@ -122,6 +125,9 @@ struct Keyboard {
 struct KeyboardEvent : Event {
 	int keyCode;
 	const char* key;
+
+	const uint8_t* state;
+
 	bool lshift;
 	bool rshift;
 	bool lctrl;
@@ -252,7 +258,7 @@ public:
 	string lastError = "";
 	Window window = {-1, -1, -1, -1, -1, -1, 0};
 	Mouse mouse = {0,0,0,0,0,0,0,false};
-	Keyboard keyboard = {-1,"",false,false,false,false,false,false,false,false,false,false,false,false,false,false};
+	Keyboard keyboard = {-1,"",{},false,false,false,false,false,false,false,false,false,false,false,false,false,false};
 
 	Argon(const char* name, int fps, int flags);
 	Argon(const char* name, int w, int h, int fps, int flags);
