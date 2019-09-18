@@ -16,7 +16,22 @@ int main(int argc, char* argv[]) {
 	int w = -1;
 	bool arrowkey[4] = {false,false,false,false};
 	argon.addLoop([&](Argon& a) {
+		//clear
 		a.clear();
+		
+		//render
+		a.image("./src/test.jpg", x,y,a.window.w,a.window.h);
+		a.setFill(0, 0, 255);
+		//a.halfSpaceTriangle(10, 10, 15, 60, 50, 50);
+		a.triangle(10, 10, 15, 60, 50, 50);
+		a.setFill(0, 255, 0);
+		// a.point(10, 10);
+		// a.point(15, 60);
+		// a.point(50, 50);
+
+		a.rect(0,0,10,10);
+
+		//events
 		// if(a.keyboard.state[SDL_SCANCODE_UP]) {
 		// 	y -= 3;
 		// }
@@ -42,18 +57,6 @@ int main(int argc, char* argv[]) {
 		if(arrowkey[3]) {
 			x += 3;
 		}
-
-		a.setFill(0, 0, 255);
-		//a.halfSpaceTriangle(10, 10, 15, 60, 50, 50);
-		a.triangle(10, 10, 15, 60, 50, 50);
-		a.setFill(0, 255, 0);
-		// a.point(10, 10);
-		// a.point(15, 60);
-		// a.point(50, 50);
-
-		//a.triangle(10, 10, 50, 50, 15, 60);
-		a.image("./test.jpg", x,y,a.window.w,a.window.h);
-		a.rect(0,0,10,10);
 	});
 	argon.addMouseListener(MOUSEMOVE, [&](Argon& a, MouseEvent& e) {
 		Argon_Color c = a.getPixel(e.x,e.y);

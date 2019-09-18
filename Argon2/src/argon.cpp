@@ -63,6 +63,9 @@ void Argon::start() {
         for(int i = 0;i < callstack.size();++i) {
           callstack[i](*this);
         }
+        for(int i = 0;i < callstack.size();++i) {
+          image_callstack[i](*this);
+        }
         callstack.clear();
         time += frameTime;
       }
@@ -1009,7 +1012,10 @@ CachedImage::CachedImage(Argon& a, const char* path) : argon(a), path(path) {
 CachedImage::~CachedImage() {
   remove();
 };
+#include <chrono>
+using namespace std::chrono;
 Argon_Rect CachedImage::draw(int sx, int sy, int sw, int sh, int dx, int dy,int dw, int dh) {
+auto start = high_resolution_clock::now();
   if(sw < 0) {sw = img->w;}
   if(sh < 0) {sh = img->h;}
   if(dw < 0) {dw = img->w;}
@@ -1018,6 +1024,10 @@ Argon_Rect CachedImage::draw(int sx, int sy, int sw, int sh, int dx, int dy,int 
   SDL_Rect dest = {dx,dy,dw,dh};
   SDL_BlitScaled(img, &src, argon.surface, &dest);
   SDL_UpdateWindowSurface(argon.win);
+  auto stop = high_resolution_clock::now();
+  auto duration = duration_cast<microseconds>(stop - start);
+  cout << duration.count() << endl;
+  Argon_Rect size(dest);
   return {dx,dy,dw,dh};
 }
 
