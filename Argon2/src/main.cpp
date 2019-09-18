@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
 	int y = 0;
 	int h = -1;
 	int w = -1;
-	bool arrowkey[4];
+	bool arrowkey[4] = {false,false,false,false};
 	argon.addLoop([&](Argon& a) {
 		a.clear();
 		// if(a.keyboard.state[SDL_SCANCODE_UP]) {
@@ -52,7 +52,12 @@ int main(int argc, char* argv[]) {
 		// a.point(50, 50);
 
 		//a.triangle(10, 10, 50, 50, 15, 60);
+		a.image("/Users/owen/Documents/Coding/landing/landing.jpg", x,y,a.window.w,a.window.h);
+		a.rect(0,0,10,10);
 		//a.image("/Users/owen/Documents/Coding/landing/midground.png", x,y,w,h);
+	});
+	argon.addMouseListener(MOUSEMOVE, [&](Argon& a, MouseEvent& e) {
+		Argon_Color c = a.getPixel(e.x,e.y);
 	});
 	argon.addKeyboardListener(KEYDOWN, [&](Argon& a, KeyboardEvent& e) {
 		if(strcmp(e.key,"W") == 0 || e.keyCode == 82) {arrowkey[0] = true;}
