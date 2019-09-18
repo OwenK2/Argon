@@ -688,6 +688,16 @@ void Argon::rect(int x, int y, int w, int h) {
   if(skipCallstack) {f(*this);}
   else {callstack.push_back(f);}
 }
+void Argon::strokeRect(int x, int y, int w, int h) {
+  function<void(Argon&)> f = ([=](Argon& a) {
+      a.line(x,y,x+w,y);
+      a.line(x+w,y,x+w,y+h);
+      a.line(x+w,y+h,x,y+h);
+      a.line(x,y+h,x,y);
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
 void Argon::circle(int cx, int cy, int r) {
   function<void(Argon&)> f = ([=](Argon& a) {
     int x = r;
@@ -808,30 +818,13 @@ Argon_Rect Argon::image(const char* path, int sx, int sy, int sw, int sh, int dx
   });
   if(it == imageCache.end()) {
     CachedImage* img = new CachedImage(*this,path);
+    if(!img->loaded) {return {-1,-1,-1,-1};}
     imageCache.push_back(img);
     return img->draw(sx,sy,sw,sh,dx,dy,dw,dh);
   }
   else {
     return (*it)->draw(sx,sy,sw,sh,dx,dy,dw,dh);
   }
-  //if not create one
-  //if so draw using sx...
-
-
-  // SDL_Surface* final;
-  // SDL_Surface* initial = IMG_Load(path);
-  // if(initial == NULL) {lastError = "Unable to optimize image " + string(path) + "! SDL Error: " + SDL_GetError();return {-1,-1,-1,-1};}
-  // final = SDL_ConvertSurface(initial, surface->format, 0);
-  // SDL_FreeSurface(initial);
-  // if(sw < 0) {sw = final->w;}
-  // if(sh < 0) {sh = final->h;}
-  // if(dw < 0) {dw = final->w;}
-  // if(dh < 0) {dh = final->h;}
-  // SDL_Rect src = {sx,sy,sw,sh};
-  // SDL_Rect dest = {dx,dy,dw,dh};
-  // SDL_BlitScaled(final, &src, surface, &dest);
-  // SDL_UpdateWindowSurface(win);
-  // return {dx,dy,dw,dh};
 }
 Argon_Rect Argon::image(const char* path,int x, int y, int w, int h) {
   return image(path,0,0,-1,-1,x,y,w,h);
@@ -853,8 +846,17 @@ void Argon::messageBox(const char* title,const char* message, uint32_t flags) {
   if(skipCallstack) {f(*this);}
   else {callstack.push_back(f);}}
 
-
-
+// UHOH so here is a problem because you cant return a value if you make this
+// function a lambda so what should we do? just not have a lambda?
+Argon_Color Argon::getPixel(int x, int y) {
+  Argon_Color c;
+  SDL_PixelFormat* fmt = surface->format;
+  SDL_LockSurface(surface);
+  uint32_t pixel = ((uint32_t*)surface->pixels)[y*(surface->pitch/fmt->BytesPerPixel) + x];
+  SDL_UnlockSurface(surface);
+  SDL_GetRGBA(pixel,fmt,&c.r,&c.g,&c.b,&c.a);
+  return c;
+}
 
 
 
@@ -866,9 +868,15 @@ void Argon::messageBox(const char* title,const char* message, uint32_t flags) {
 
 CachedImage::CachedImage(Argon& a, const char* path) : argon(a), path(path) {
   SDL_Surface* initial = IMG_Load(path);
-  if(initial == NULL) {argon.lastError = "Unable to optimize image " + string(path) + "! SDL Error: " + SDL_GetError();return;}
+  if(initial == NULL) {
+    argon.lastError = "Unable to optimize image " + string(path) + "! SDL Error: " + SDL_GetError();
+    cerr << "\e[31m[ERROR] Failed to load " << path << "\e[0m" << endl;
+    loaded = false;
+    return;
+  }
   img = SDL_ConvertSurface(initial, argon.surface->format, 0);
   SDL_FreeSurface(initial);
+  loaded = true;
 };
 CachedImage::~CachedImage() {
   remove();
