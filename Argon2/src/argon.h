@@ -544,12 +544,7 @@ public:
 
 	void strokeRect(int x, int y, int w, int h);
 	void rect(int x, int y, int w, int h);
-<<<<<<< HEAD
 
-=======
-	void strokeRect(int x, int y, int w, int h);
-	void polygon(Points& points);
->>>>>>> 4444a4f760a32ccfae67b38c276421530ec246cd
 	void strokePolygon(Points& points);
 	void polygon(Points& points);
 
