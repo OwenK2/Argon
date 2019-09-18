@@ -1,13 +1,7 @@
 using namespace std;
 
-struct Point {
-	int x;
-	int y;
-	void print() {
-		cout << "(" << x << ", " << y << ")" << endl;
-	}
-};
-typedef vector<Point> Points;
+#include "triangle.h"
+
 struct Edge {
   int max;
   int min;
@@ -52,11 +46,11 @@ public:
 
 // /*
 //     Creates edge buckets from the given edges
- 
+
 //     @param n    Number of vertices
 //     @param x[]  array of x points
 //     @param y[]  array of y points
- 
+
 //     @return     List of edge buckets
 //  */
 // createEdges(n, x[], y[]) {
@@ -68,7 +62,7 @@ public:
 //     }
 // }/*
 //     Given the edge table of the polygon, fill the polygons
- 
+
 //     @param edgeTable The polygon's edge table representation
 //  */
 // processEdgeTable (edgeTable) {

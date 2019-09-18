@@ -7,6 +7,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <iostream>
+#include "triangle.h"
+
 #include "polygon.h"
 
 using namespace std;
@@ -247,6 +249,7 @@ private:
 
 	//Hidden Functions
 	void init(int x, int y, int w, int h, int flags);
+
 	static int eventWatcher(void* data, SDL_Event* e);
 
 	friend class CachedImage;
@@ -263,42 +266,64 @@ public:
 	Argon(const char* name, int fps, int flags);
 	Argon(const char* name, int w, int h, int fps, int flags);
 	Argon(const char* name, int x, int y, int w, int h, int fps, int flags);
+
 	~Argon();
 
 	void start();
 	void quit();
 	void close();
+
 	void addWindowListener(EventType type, WindowListener listener);
 	void addMouseListener(EventType type, MouseListener listener);
 	void addKeyboardListener(EventType type, KeyboardListener listener);
 	void addWheelListener(EventType type, WheelListener listener);
 	void addFileListener(EventType type, FileListener listener);
+
 	bool removeListener(EventType type, int index);
+
 	void addLoop(Task task);
 	bool removeLoop(int index);
+
 	void setFps(int _fps);
 	int getFps();
 
 	//Add draw to call stack
 	void clear();
 	void clear(int x, int y, int w, int h);
+
 	void point(int x, int y);
+
 	void line(int x1, int y1, int x2, int y2);
+
 	void strokeCircle(int x, int y, int r);
 	void circle(int x, int y, int r);
+
+	void strokeTriangle(int x1, int y1, int x2, int y2, int x3, int y3);
+	void scanLineTriangle(int x1, int y1, int x2, int y2, int x3, int y3);
+	void halfSpaceTriangle(int x1, int y1, int x2, int y2, int x3, int y3);
+	void triangle(int x1, int y1, int x2, int y2, int x3, int y3);
+
+	void strokeRect(int x, int y, int w, int h);
 	void rect(int x, int y, int w, int h);
-	void polygon(Points& points);
+
 	void strokePolygon(Points& points);
+	void polygon(Points& points);
+
 	Argon_Rect image(const char* path, int x, int y);
 	Argon_Rect image(const char* path, int x, int y, int w, int h);
 	Argon_Rect image(const char* path, int sx, int sy, int sw, int sh, int dx, int dy,int dw,int dh);
-	void wait(int ms);
+
 	void setBackground(Argon_Color color);
 	void setBackground(int r, int g, int b, int a = 255);
+
 	void setStroke(Argon_Color color);
 	void setStroke(int r, int g, int b, int a = 255);
+
 	void setFill(Argon_Color color);
 	void setFill(int r, int g, int b, int a = 255);
+
+	void wait(int ms);
+
 	void messageBox(const char* title,const char* message, uint32_t flags = ARGON_MESSAGE_INFO);
 };
 

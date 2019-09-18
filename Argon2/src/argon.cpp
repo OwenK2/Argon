@@ -1,7 +1,6 @@
 #include "argon.h"
 using namespace std;
 
-
 //Argon
 
 Argon::Argon(const char* _name, int _fps, int _flags) : name(_name), fps(_fps) {
@@ -13,6 +12,7 @@ Argon::Argon(const char* _name, int _fps, int _w, int _h, int _flags) : name(_na
 Argon::Argon(const char* _name, int _fps, int _x, int _y, int _w, int _h, int _flags) : name(_name), fps(_fps) {
   init(_x,_y,_w,_h,_flags);
 }
+
 Argon::~Argon() {
   quit();
 }
@@ -45,24 +45,7 @@ void Argon::init(int x,int y,int w,int h,int flags) {
   SDL_AddEventWatch(eventWatcher, this);
   running = true;
   frameTime = 1000 / fps;
-}
-void Argon::quit() {
-  for(auto img : imageCache) {
-    delete img;
-  }
-  running = false;
-  SDL_DelEventWatch(eventWatcher,this);
-  SDL_DestroyRenderer(ren);
-  SDL_DestroyWindow(win);
-  SDL_Quit();
-}
-void Argon::close() {
-  running = false;
-  if(quitOnClose) {quit();return;}
-  SDL_DestroyWindow(win);
-  SDL_DestroyRenderer(ren);
-  SDL_QuitSubSystem(SDL_INIT_VIDEO);
-}
+} //private
 
 void Argon::start() {
   uint32_t time = SDL_GetTicks();
@@ -90,6 +73,23 @@ void Argon::start() {
     }
     SDL_PollEvent(&e);
   }
+}
+void Argon::quit() {
+  for(auto img : imageCache) {
+    delete img;
+  }
+  running = false;
+  SDL_DelEventWatch(eventWatcher,this);
+  SDL_DestroyRenderer(ren);
+  SDL_DestroyWindow(win);
+  SDL_Quit();
+}
+void Argon::close() {
+  running = false;
+  if(quitOnClose) {quit();return;}
+  SDL_DestroyWindow(win);
+  SDL_DestroyRenderer(ren);
+  SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
 int Argon::eventWatcher(void* data, SDL_Event* e) {
@@ -518,7 +518,8 @@ int Argon::eventWatcher(void* data, SDL_Event* e) {
   }
 
   return 0;
-}
+} //private
+
 void Argon::addWindowListener(EventType type, WindowListener listener) {
   switch(type) {
     case QUIT: quitListeners.push_back(&listener); break;
@@ -569,6 +570,7 @@ void Argon::addFileListener(EventType type, FileListener listener) {
     default: break;
   }
 }
+
 bool Argon::removeListener(EventType type, int index) {
   return false;
   switch(type) {
@@ -600,6 +602,7 @@ bool Argon::removeListener(EventType type, int index) {
     case DROPFILE: if(dropFileListeners.at(index) != NULL) {dropFileListeners.erase(dropFileListeners.begin()+index);return true;} else {return false;} break;
   }
 }
+
 void Argon::addLoop(Task task) {
   tasklist.push_back(task);
 }
@@ -610,40 +613,13 @@ bool Argon::removeLoop(int index) {
   }
   return false;
 }
+
 void Argon::setFps(int _fps) {
   fps = _fps;
   frameTime = 1000 / fps;
 }
 int Argon::getFps() {
   return fps;
-}
-
-void Argon::setBackground(Argon_Color color) {
-  function<void(Argon&)> f = [=](Argon& a) {a.bg = color;};
-  if(skipCallstack) {f(*this);}
-  else {callstack.push_back(f);}
-}
-void Argon::setBackground(int r, int g, int b, int a) {
-  Argon_Color color = {static_cast<uint8_t>(r),static_cast<uint8_t>(g),static_cast<uint8_t>(b),static_cast<uint8_t>(a)};
-  setBackground(color);
-}
-void Argon::setStroke(Argon_Color color) {
-  function<void(Argon&)> f = [=](Argon& a) {a.stroke = color;};
-  if(skipCallstack) {f(*this);}
-  else {callstack.push_back(f);}
-}
-void Argon::setStroke(int r, int g, int b, int a) {
-  Argon_Color color = {static_cast<uint8_t>(r),static_cast<uint8_t>(g),static_cast<uint8_t>(b),static_cast<uint8_t>(a)};
-  setStroke(color);
-}
-void Argon::setFill(Argon_Color color) {
-  function<void(Argon&)> f = [=](Argon& a) {a.fill = color;};
-  if(skipCallstack) {f(*this);}
-  else {callstack.push_back(f);}
-}
-void Argon::setFill(int r, int g, int b, int a) {
-  Argon_Color color = {static_cast<uint8_t>(r),static_cast<uint8_t>(g),static_cast<uint8_t>(b),static_cast<uint8_t>(a)};
-  setFill(color);
 }
 
 void Argon::clear() {
@@ -663,6 +639,7 @@ void Argon::clear(int x, int y, int w, int h) {
   if(skipCallstack) {f(*this);}
   else {callstack.push_back(f);}
 }
+
 void Argon::point(int x, int y) {
   function<void(Argon&)> f = ([=](Argon& a) {
     SDL_SetRenderDrawColor(a.ren, a.stroke.r, a.stroke.g, a.stroke.b, a.stroke.a);
@@ -671,6 +648,7 @@ void Argon::point(int x, int y) {
   if(skipCallstack) {f(*this);}
   else {callstack.push_back(f);}
 }
+
 void Argon::line(int x1, int y1, int x2, int y2) {
   function<void(Argon&)> f = ([=](Argon& a) {
     SDL_SetRenderDrawColor(a.ren, a.stroke.r, a.stroke.g, a.stroke.b, a.stroke.a);
@@ -679,40 +657,7 @@ void Argon::line(int x1, int y1, int x2, int y2) {
   if(skipCallstack) {f(*this);}
   else {callstack.push_back(f);}
 }
-void Argon::rect(int x, int y, int w, int h) {
-  function<void(Argon&)> f = ([=](Argon& a) {
-    SDL_SetRenderDrawColor(a.ren, a.fill.r, a.fill.g, a.fill.b, a.fill.a);
-    SDL_Rect rect = {x,y,w,h};
-    SDL_RenderFillRect(a.ren, &rect);
-  });
-  if(skipCallstack) {f(*this);}
-  else {callstack.push_back(f);}
-}
-void Argon::circle(int cx, int cy, int r) {
-  function<void(Argon&)> f = ([=](Argon& a) {
-    int x = r;
-    int y = 0;
-    int err = 0;
-    SDL_SetRenderDrawColor(a.ren, a.fill.r, a.fill.g, a.fill.b, a.fill.a);
-    while (x >= y) {
-      SDL_RenderDrawLine(a.ren, cx-x, cy+y, cx+x, cy+y);
-      SDL_RenderDrawLine(a.ren, cx-y, cy+x, cx+y, cy+x);
-      SDL_RenderDrawLine(a.ren, cx-x, cy-y, cx+x, cy-y);
-      SDL_RenderDrawLine(a.ren, cx-y, cy-x, cx+y, cy-x);
-      if (err <= 0) {
-        y += 1;
-        err += 2*y + 1;
-      }
 
-      if (err > 0) {
-        x -= 1;
-        err -= 2*x + 1;
-      }
-    }
-  });
-  if(skipCallstack) {f(*this);}
-  else {callstack.push_back(f);}
-}
 void Argon::strokeCircle(int cx, int cy, int r) {
   function<void(Argon&)> f = ([=](Argon& a) {
     int x = r;
@@ -742,66 +687,226 @@ void Argon::strokeCircle(int cx, int cy, int r) {
   if(skipCallstack) {f(*this);}
   else {callstack.push_back(f);}
 }
-void Argon::polygon(Points& points) {
-  int top = 2000000000;
-  int bottom = -2000000000;
-  int left = 2000000000;
-  int right = -2000000000;
-  for(auto pt : points) {
-    cout << "\e[32m(" << pt.x << ", " << pt.y << ")\e[0m" << endl;
-    if(pt.y < top) {top = pt.y;}
-    else if(pt.y > bottom) {bottom = pt.y;}
-    if(pt.x > right) {right = pt.x;}
-    else if(pt.x < left) {left = pt.x;}
-  }
+void Argon::circle(int cx, int cy, int r) {
   function<void(Argon&)> f = ([=](Argon& a) {
-    Polygon p(points);
+    int x = r;
+    int y = 0;
+    int err = 0;
+    SDL_SetRenderDrawColor(a.ren, a.fill.r, a.fill.g, a.fill.b, a.fill.a);
+    while (x >= y) {
+      SDL_RenderDrawLine(a.ren, cx-x, cy+y, cx+x, cy+y);
+      SDL_RenderDrawLine(a.ren, cx-y, cy+x, cx+y, cy+x);
+      SDL_RenderDrawLine(a.ren, cx-x, cy-y, cx+x, cy-y);
+      SDL_RenderDrawLine(a.ren, cx-y, cy-x, cx+y, cy-x);
+      if (err <= 0) {
+        y += 1;
+        err += 2*y + 1;
+      }
 
-  });
-  if(skipCallstack) {f(*this);}
-  else {callstack.push_back(f);}
-  // int  nodes, nodeX[MAX_POLY_CORNERS], pixelX, pixelY, i, j, swap ;
-
-  // //  Loop through the rows of the image.
-  // for (pixelY=IMAGE_TOP; pixelY<IMAGE_BOT; pixelY++) {
-
-  //   //  Build a list of nodes.
-  //   nodes=0; j=polyCorners-1;
-  //   for (i=0; i<polyCorners; i++) {
-  //     if (polyY[i]<(double) pixelY && polyY[j]>=(double) pixelY
-  //     ||  polyY[j]<(double) pixelY && polyY[i]>=(double) pixelY) {
-  //       nodeX[nodes++]=(int) (polyX[i]+(pixelY-polyY[i])/(polyY[j]-polyY[i])
-  //       *(polyX[j]-polyX[i])); }
-  //     j=i; }
-
-  //   //  Sort the nodes, via a simple “Bubble” sort.
-  //   i=0;
-  //   while (i<nodes-1) {
-  //     if (nodeX[i]>nodeX[i+1]) {
-  //       swap=nodeX[i]; nodeX[i]=nodeX[i+1]; nodeX[i+1]=swap; if (i) i--; }
-  //     else {
-  //       i++; }}
-//  Fill the pixels between node pairs.
-// for (i=0; i<nodes; i+=2) {
-//   if   (nodeX[i  ]>=IMAGE_RIGHT) break;
-//   if   (nodeX[i+1]> IMAGE_LEFT ) {
-//     if (nodeX[i  ]< IMAGE_LEFT ) nodeX[i  ]=IMAGE_LEFT ;
-//     if (nodeX[i+1]> IMAGE_RIGHT) nodeX[i+1]=IMAGE_RIGHT;
-//     for (pixelX=nodeX[i]; pixelX<nodeX[i+1]; pixelX++) fillPixel(pixelX,pixelY); }}}
-
-}
-void Argon::strokePolygon(Points& points) {
-  if(points.size() < 3) {return;}
-  function<void(Argon&)> f = ([=](Argon& a) {
-    SDL_SetRenderDrawColor(a.ren, a.stroke.r, a.stroke.g, a.stroke.b, a.stroke.a);
-    for(auto it = points.begin()+1;it != points.end();++it) {
-      a.line((it-1)->x,(it-1)->y,it->x,it->y);
+      if (err > 0) {
+        x -= 1;
+        err -= 2*x + 1;
+      }
     }
-    a.line(points.back().x,points.back().y,points.begin()->x,points.begin()->y);
   });
   if(skipCallstack) {f(*this);}
   else {callstack.push_back(f);}
 }
+
+void Argon::strokeTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
+  function<void(Argon&)> f = ([=](Argon& a) {
+    SDL_SetRenderDrawColor(a.ren, a.fill.r, a.fill.g, a.fill.b, a.fill.a);
+    SDL_RenderDrawLine(a.ren, x1, y1, x2, y2);
+    SDL_RenderDrawLine(a.ren, x2, y2, x3, y3);
+    SDL_RenderDrawLine(a.ren, x3, y3, x1, y1);
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
+//maybe refactor with point structs???
+void Argon::scanLineTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
+  //sort points by y
+  if(y1 > y2) {
+    int tmpY = y1;
+    int tmpX = x1;
+    y1 = y2;
+    x1 = x2;
+    y2 = tmpY;
+    x2 = tmpX;
+  }
+  if(y2 > y3) {
+    int tmpY = y2;
+    int tmpX = x2;
+    y2 = y3;
+    x2 = x3;
+    y3 = tmpY;
+    x3 = tmpX;
+  }
+  if(y1 > y2) {
+    int tmpY = y1;
+    int tmpX = x1;
+    y1 = y2;
+    x1 = x2;
+    y2 = tmpY;
+    x2 = tmpX;
+  }
+
+  //get change in x for each increment in y for each side of the triangle
+  double dx1 = 0;
+  double dx2 = 0;
+  double dx3 = 0;
+  if(y2 - y1 != 0) { //make sure points aren't at same y value
+    dx1 = double(x2-x1)/(y2-y1);
+  }
+  if(y3 - y1 != 0) { //make sure points aren't at same y value
+    dx2 = double(x3-x1)/(y3-y1);
+  }
+  if(y3 - y2 != 0) { //make sure points aren't at same y value
+    dx3 = double(x3-x2)/(y3-y2);
+  }
+
+  //begin scanline
+  function<void(Argon&)> f = ([=](Argon& a) {
+    double sx = double(x1);
+    double sy = double(y1);
+    double ex = double(sx);
+    double ey = double(sy);
+    SDL_SetRenderDrawColor(a.ren, a.fill.r, a.fill.g, a.fill.b, a.fill.a);
+    for(; sy < y2; ++sy, ++ey, sx += dx1, ex += dx2) {
+      SDL_RenderDrawLine(a.ren, int(sx), int(sy), int(ex), int(ey));
+    }
+    for(; sy < y3; ++sy, ++ey, sx += dx3, ex += dx2) {
+      SDL_RenderDrawLine(a.ren, int(sx), int(sy), int(ex), int(ey));
+    }
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
+void Argon::halfSpaceTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
+  //Reading:
+  /*
+  https://fgiesen.wordpress.com/2013/02/17/optimizing-sw-occlusion-culling-index/
+  https://www.uni-obudna.hu/journal/Mileff_Nehez_Dudra_63.pdf
+  */
+
+  //get bounding box
+  int xMin = min(min(x1, x2), x3);
+  int xMax = max(max(x1, x2), x3);
+  int yMin = min(min(y1, y2), y3);
+  int yMax = max(max(y1, y2), y3);
+  //clip bounding box if it goes off screen
+  xMin = max(xMin, 0);
+  xMax = min(xMax, window.w);
+  yMin = max(yMin, 0);
+  yMax = min(yMax, window.h);
+
+  //strokeRect(xMin, yMin, xMax-xMin, yMax-yMin);
+
+  //begin lambda
+  function<void(Argon&)> f = ([=](Argon& a) {
+    //loop through pixels in bounding box
+    for(int i = xMin; i <= xMax; ++i) {
+      for(int j = yMin; j <= xMax; ++j) {
+        int c1 = (x3-x1)*(j-y1) - (y3-y1)*(i-x1);
+        int c2 = (x3-x2)*(j-y2) - (y3-y2)*(i-x2);
+        int c3 = (x2-x3)*(j-y3) - (y2-y3)*(i-x3);
+        if((c1 >=  0 && c2 >= 0 && c3 >= 0) || (c1 <= 0 && c2 <= 0 && c3 <= 0)) {
+          SDL_SetRenderDrawColor(a.ren, a.fill.r, a.fill.g, a.fill.b, a.fill.a);
+          SDL_RenderDrawPoint(a.ren, i, j);
+        }
+      }
+    }
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
+void Argon::triangle(int x1, int y1, int x2, int y2, int x3, int y3) {
+  scanLineTriangle(x1, y1, x2, y2, x3, y3);
+}
+
+void Argon::strokeRect(int x, int y, int w, int h) {
+  function<void(Argon&)> f = ([=](Argon& a) {
+    SDL_SetRenderDrawColor(a.ren, a.fill.r, a.fill.g, a.fill.b, a.fill.a);
+    SDL_RenderDrawLine(a.ren, x, y, x+w, y);
+    SDL_RenderDrawLine(a.ren, x+w, y, x+w, y+h);
+    SDL_RenderDrawLine(a.ren, x, y+h, x+w, y+h);
+    SDL_RenderDrawLine(a.ren, x, y, x, y+h);
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
+void Argon::rect(int x, int y, int w, int h) {
+  function<void(Argon&)> f = ([=](Argon& a) {
+    SDL_SetRenderDrawColor(a.ren, a.fill.r, a.fill.g, a.fill.b, a.fill.a);
+    SDL_Rect rect = {x,y,w,h};
+    SDL_RenderFillRect(a.ren, &rect);
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
+
+void Argon::strokePolygon(Points& points) {
+  // if(points.size() < 3) {return;}
+  // function<void(Argon&)> f = ([=](Argon& a) {
+  //   SDL_SetRenderDrawColor(a.ren, a.stroke.r, a.stroke.g, a.stroke.b, a.stroke.a);
+  //   for(auto it = points.begin()+1;it != points.end();++it) {
+  //     a.line((it-1)->x,(it-1)->y,it->x,it->y);
+  //   }
+  //   a.line(points.back().x,points.back().y,points.begin()->x,points.begin()->y);
+  // });
+  // if(skipCallstack) {f(*this);}
+  // else {callstack.push_back(f);}
+}
+void Argon::polygon(Points& points) {
+  // int top = 2000000000;
+  // int bottom = -2000000000;
+  // int left = 2000000000;
+  // int right = -2000000000;
+  // for(auto pt : points) {
+  //   cout << "\e[32m(" << pt.x << ", " << pt.y << ")\e[0m" << endl;
+  //   if(pt.y < top) {top = pt.y;}
+  //   else if(pt.y > bottom) {bottom = pt.y;}
+  //   if(pt.x > right) {right = pt.x;}
+  //   else if(pt.x < left) {left = pt.x;}
+  // }
+  // function<void(Argon&)> f = ([=](Argon& a) {
+  //   Polygon p(points);
+  //
+  // });
+  // if(skipCallstack) {f(*this);}
+  // else {callstack.push_back(f);}
+  //OTHER THING
+    // int  nodes, nodeX[MAX_POLY_CORNERS], pixelX, pixelY, i, j, swap ;
+
+    // //  Loop through the rows of the image.
+    // for (pixelY=IMAGE_TOP; pixelY<IMAGE_BOT; pixelY++) {
+
+    //   //  Build a list of nodes.
+    //   nodes=0; j=polyCorners-1;
+    //   for (i=0; i<polyCorners; i++) {
+    //     if (polyY[i]<(double) pixelY && polyY[j]>=(double) pixelY
+    //     ||  polyY[j]<(double) pixelY && polyY[i]>=(double) pixelY) {
+    //       nodeX[nodes++]=(int) (polyX[i]+(pixelY-polyY[i])/(polyY[j]-polyY[i])
+    //       *(polyX[j]-polyX[i])); }
+    //     j=i; }
+
+    //   //  Sort the nodes, via a simple “Bubble” sort.
+    //   i=0;
+    //   while (i<nodes-1) {
+    //     if (nodeX[i]>nodeX[i+1]) {
+    //       swap=nodeX[i]; nodeX[i]=nodeX[i+1]; nodeX[i+1]=swap; if (i) i--; }
+    //     else {
+    //       i++; }}
+    //  Fill the pixels between node pairs.
+    // for (i=0; i<nodes; i+=2) {
+    //   if   (nodeX[i  ]>=IMAGE_RIGHT) break;
+    //   if   (nodeX[i+1]> IMAGE_LEFT ) {
+    //     if (nodeX[i  ]< IMAGE_LEFT ) nodeX[i  ]=IMAGE_LEFT ;
+    //     if (nodeX[i+1]> IMAGE_RIGHT) nodeX[i+1]=IMAGE_RIGHT;
+    //     for (pixelX=nodeX[i]; pixelX<nodeX[i+1]; pixelX++) fillPixel(pixelX,pixelY); }}}
+
+}
+
 Argon_Rect Argon::image(const char* path, int sx, int sy, int sw, int sh, int dx, int dy,int dw, int dh) {
   auto it = find_if(imageCache.begin(),imageCache.end(), [=](const CachedImage* obj) {
     return strcmp(obj->path, path) == 0;
@@ -839,6 +944,38 @@ Argon_Rect Argon::image(const char* path,int x, int y, int w, int h) {
 Argon_Rect Argon::image(const char* path,int x, int y) {
   return image(path,0,0,-1,-1,x,y,-1,-1);
 }
+
+void Argon::setBackground(Argon_Color color) {
+  function<void(Argon&)> f = [=](Argon& a) {a.bg = color;};
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
+void Argon::setBackground(int r, int g, int b, int a) {
+  Argon_Color color = {static_cast<uint8_t>(r),static_cast<uint8_t>(g),static_cast<uint8_t>(b),static_cast<uint8_t>(a)};
+  setBackground(color);
+}
+
+void Argon::setStroke(Argon_Color color) {
+  function<void(Argon&)> f = [=](Argon& a) {a.stroke = color;};
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
+void Argon::setStroke(int r, int g, int b, int a) {
+  Argon_Color color = {static_cast<uint8_t>(r),static_cast<uint8_t>(g),static_cast<uint8_t>(b),static_cast<uint8_t>(a)};
+  setStroke(color);
+}
+
+void Argon::setFill(Argon_Color color) {
+  function<void(Argon&)> f = [=](Argon& a) {a.fill = color;};
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
+void Argon::setFill(int r, int g, int b, int a) {
+  Argon_Color color = {static_cast<uint8_t>(r),static_cast<uint8_t>(g),static_cast<uint8_t>(b),static_cast<uint8_t>(a)};
+  setFill(color);
+}
+
+
 void Argon::wait(int ms) {
   function<void(Argon&)> f = ([=](Argon& a) {
     SDL_Delay(ms);
@@ -846,6 +983,7 @@ void Argon::wait(int ms) {
   if(skipCallstack) {f(*this);}
   else {callstack.push_back(f);}
 }
+
 void Argon::messageBox(const char* title,const char* message, uint32_t flags) {
   function<void(Argon&)> f = ([=](Argon& a) {
     SDL_ShowSimpleMessageBox(flags,title,message,a.win);

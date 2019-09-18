@@ -5,3 +5,5 @@ Known Bugs
 	- MOUSEUP triggered on MOUSELEAVE & MOUSEENTER
 	- messageBox fails if sent variables
 	- resize is messed
+	- shit blinks
+	-!!!!!!!!!!!!!MAYBE ADD CACHED OBJECTS!!!!!!!!!!!!!

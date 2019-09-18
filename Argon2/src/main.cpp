@@ -44,7 +44,14 @@ int main(int argc, char* argv[]) {
 		}
 
 		a.image("/Users/michaelkuhn/Downloads/IMG_1504.jpg", x,y,w,h);
+		a.setFill(0, 0, 255);
+		a.halfSpaceTriangle(10, 10, 15, 60, 50, 50);
+		a.setFill(0, 255, 0);
+		// a.point(10, 10);
+		// a.point(15, 60);
+		// a.point(50, 50);
 
+		//a.triangle(10, 10, 50, 50, 15, 60);
 		//a.image("/Users/owen/Documents/Coding/landing/midground.png", x,y,w,h);
 	});
 	argon.addKeyboardListener(KEYDOWN, [&](Argon& a, KeyboardEvent& e) {
