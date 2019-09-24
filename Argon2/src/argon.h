@@ -484,7 +484,6 @@ private:
 	//Tasklist
 	Tasklist tasklist;
 	Tasklist callstack;
-	Tasklist image_callstack;
 
 
 
@@ -575,8 +574,11 @@ public:
 class CachedImage {
 public:
 	bool loaded;
+	int w;
+	int h;
 	const char* path;
-	SDL_Surface* img;
+	// SDL_Surface* img;
+	SDL_Texture* img;
 	Argon& argon;
 
 	CachedImage(Argon& a, const char* path);

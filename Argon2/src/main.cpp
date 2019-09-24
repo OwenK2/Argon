@@ -1,6 +1,3 @@
-
-
-
 #include "argon.h"
 #include <cmath>
 

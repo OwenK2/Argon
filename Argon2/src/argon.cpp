@@ -1,6 +1,7 @@
 #include "argon.h"
 using namespace std;
 
+
 //Argon
 
 Argon::Argon(const char* _name, int _fps, int _flags) : name(_name), fps(_fps) {
@@ -62,9 +63,6 @@ void Argon::start() {
         skipCallstack = false;
         for(int i = 0;i < callstack.size();++i) {
           callstack[i](*this);
-        }
-        for(int i = 0;i < callstack.size();++i) {
-          image_callstack[i](*this);
         }
         callstack.clear();
         time += frameTime;
@@ -909,7 +907,6 @@ void Argon::polygon(Points& points) {
     //     for (pixelX=nodeX[i]; pixelX<nodeX[i+1]; pixelX++) fillPixel(pixelX,pixelY); }}}
 
 }
-
 Argon_Rect Argon::image(const char* path, int sx, int sy, int sw, int sh, int dx, int dy,int dw, int dh) {
   auto it = find_if(imageCache.begin(),imageCache.end(), [=](const CachedImage* obj) {
     return strcmp(obj->path, path) == 0;
@@ -979,6 +976,7 @@ void Argon::messageBox(const char* title,const char* message, uint32_t flags) {
 
 // UHOH so here is a problem because you cant return a value if you make this
 // function a lambda so what should we do? just not have a lambda?
+// or you clould make the usder pass a callback lambda to getPixel
 Argon_Color Argon::getPixel(int x, int y) {
   Argon_Color c;
   SDL_PixelFormat* fmt = surface->format;
@@ -996,6 +994,12 @@ Argon_Color Argon::getPixel(int x, int y) {
 
 
 //Cached Image
+#include <chrono> 
+using namespace std::chrono;
+auto start = high_resolution_clock::now(); 
+// auto stop = high_resolution_clock::now(); 
+// auto duration = duration_cast<microseconds>(stop - start); 
+// duration.count();
 
 CachedImage::CachedImage(Argon& a, const char* path) : argon(a), path(path) {
   SDL_Surface* initial = IMG_Load(path);
@@ -1005,29 +1009,22 @@ CachedImage::CachedImage(Argon& a, const char* path) : argon(a), path(path) {
     loaded = false;
     return;
   }
-  img = SDL_ConvertSurface(initial, argon.surface->format, 0);
+  img = SDL_CreateTextureFromSurface(a.ren,initial);
+  SDL_QueryTexture(img, NULL, NULL, &w, &h);
   SDL_FreeSurface(initial);
   loaded = true;
 };
 CachedImage::~CachedImage() {
   remove();
 };
-#include <chrono>
-using namespace std::chrono;
 Argon_Rect CachedImage::draw(int sx, int sy, int sw, int sh, int dx, int dy,int dw, int dh) {
-auto start = high_resolution_clock::now();
-  if(sw < 0) {sw = img->w;}
-  if(sh < 0) {sh = img->h;}
-  if(dw < 0) {dw = img->w;}
-  if(dh < 0) {dh = img->h;}
+  if(sw < 0) {sw = w;}
+  if(sh < 0) {sh = h;}
+  if(dw < 0) {dw = w;}
+  if(dh < 0) {dh = h;}
   SDL_Rect src = {sx,sy,sw,sh};
   SDL_Rect dest = {dx,dy,dw,dh};
-  SDL_BlitScaled(img, &src, argon.surface, &dest);
-  SDL_UpdateWindowSurface(argon.win);
-  auto stop = high_resolution_clock::now();
-  auto duration = duration_cast<microseconds>(stop - start);
-  cout << duration.count() << endl;
-  Argon_Rect size(dest);
+  SDL_RenderCopy(argon.ren,img,&src,&dest);
   return {dx,dy,dw,dh};
 }
 
@@ -1036,5 +1033,5 @@ void CachedImage::remove() {
   if(it != argon.imageCache.end()) {
     argon.imageCache.erase(it);
   }
-  SDL_FreeSurface(img);
+  SDL_DestroyTexture(img);
 }
