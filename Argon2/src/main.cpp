@@ -1,6 +1,3 @@
-
-
-
 #include "argon.h"
 #include <cmath>
 
@@ -58,8 +55,12 @@ int main(int argc, char* argv[]) {
 			x += 3;
 		}
 	});
+	int last = 0;
 	argon.addMouseListener(MOUSEMOVE, [&](Argon& a, MouseEvent& e) {
 		Argon_Color c = a.getPixel(e.x,e.y);
+		//USING LAST so it doesnt spam too hard
+		if(last % 10 == 0) printf("%d, %d, %d\n",c.r,c.g,c.b);
+		last ++;
 	});
 	argon.addKeyboardListener(KEYDOWN, [&](Argon& a, KeyboardEvent& e) {
 		if(strcmp(e.key,"W") == 0 || e.keyCode == 82) {arrowkey[0] = true;}
