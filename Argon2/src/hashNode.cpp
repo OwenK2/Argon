@@ -1,20 +1,20 @@
 #include "hashNode.h"
 
-HashNode::HashNode(const KEY &_key, const VALUE &_value) : key(_key), value(_value), next(NULL) {};
+HashNode::HashNode(const K &_key, const V &_value) : key(_key), value(_value), next(NULL) {};
 
-KEY HashNode::getKey() const {
+K HashNode::getKey() const {
   return key;
 };
-VALUE HashNode::getValue() const {
+V HashNode::getValue() const {
   return value;
 };
-HashNode HashNode::getNext() const {
+HashNode<K, T> HashNode::getNext() const {
   return next;
 };
 
-void HashNode::setValue(VALUE val) {
+void HashNode::setValue(V val) {
   value = val;
 };
-void HashNode::setNext(HashNode *nxt) {
+void HashNode::setNext(HashNode<K, T> *nxt) {
   next = nxt;
 };
