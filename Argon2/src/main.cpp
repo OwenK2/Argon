@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
 	argon.addLoop([&](Argon& a) {
 		//clear
 		a.clear();
-		
+
 		//render
 		a.image("./src/test.jpg", x,y,a.window.w,a.window.h);
 		a.setFill(0, 0, 255);
@@ -27,6 +27,11 @@ int main(int argc, char* argv[]) {
 		// a.point(50, 50);
 
 		a.rect(0,0,10,10);
+
+		Points pts = {new Point(250, 100), new Point(100, 200), new Point(200, 300), new Point(300, 200), new Point(400, 300)};
+
+		a.setFill(255, 0, 0);
+		a.polygon(pts);
 
 		//events
 		// if(a.keyboard.state[SDL_SCANCODE_UP]) {
@@ -41,19 +46,22 @@ int main(int argc, char* argv[]) {
 		// if(a.keyboard.state[SDL_SCANCODE_RIGHT]) {
 		// 	x += 3;
 		// }
-
+		int dx = 0;
+		int dy = 0;
 		if(arrowkey[0]) {
-			y -= 3;
+			dy -= 3;
 		}
 		if(arrowkey[1]) {
-			x -= 3;
+			dx -= 3;
 		}
 		if(arrowkey[2]) {
-			y += 3;
+			dy += 3;
 		}
 		if(arrowkey[3]) {
-			x += 3;
+			dx += 3;
 		}
+		x += dx;
+		y += dy;
 	});
 	int last = 0;
 	argon.addMouseListener(MOUSEMOVE, [&](Argon& a, MouseEvent& e) {

@@ -783,7 +783,7 @@ void Argon::scanLineTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
   if(skipCallstack) {f(*this);}
   else {callstack.push_back(f);}
 }
-void Argon::halfSpaceTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
+void Argon::halfSpaceTriangle(int x1, int y1, int x2, int y2, int x3, int y3) { //TODO: FIX THIS!!!!!
   //Reading:
   /*
   https://fgiesen.wordpress.com/2013/02/17/optimizing-sw-occlusion-culling-index/
@@ -822,7 +822,7 @@ void Argon::halfSpaceTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
   else {callstack.push_back(f);}
 }
 void Argon::triangle(int x1, int y1, int x2, int y2, int x3, int y3) {
-  scanLineTriangle(x1, y1, x2, y2, x3, y3);
+  scanLineTriangle(x1, y1, x2, y2, x3, y3); //half space algorithm is not yet functional
 }
 
 void Argon::strokeRect(int x, int y, int w, int h) {
@@ -847,35 +847,66 @@ void Argon::rect(int x, int y, int w, int h) {
 }
 
 void Argon::strokePolygon(Points& points) {
-  // if(points.size() < 3) {return;}
-  // function<void(Argon&)> f = ([=](Argon& a) {
-  //   SDL_SetRenderDrawColor(a.ren, a.stroke.r, a.stroke.g, a.stroke.b, a.stroke.a);
-  //   for(auto it = points.begin()+1;it != points.end();++it) {
-  //     a.line((it-1)->x,(it-1)->y,it->x,it->y);
-  //   }
-  //   a.line(points.back().x,points.back().y,points.begin()->x,points.begin()->y);
-  // });
-  // if(skipCallstack) {f(*this);}
-  // else {callstack.push_back(f);}
+  if(points.size() < 3) {return;}
+  function<void(Argon&)> f = ([=](Argon& a) {
+    SDL_SetRenderDrawColor(a.ren, a.stroke.r, a.stroke.g, a.stroke.b, a.stroke.a);
+    for(auto it = points.begin()+1;it != points.end();++it) {
+      a.line((*(it-1))->x,(*(it-1))->y,(*it)->x,(*it)->y);
+    }
+    a.line(points.back()->x,points.back()->y, points.front()->x,points.front()->y);
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
 }
 void Argon::polygon(Points& points) {
-  // int top = 2000000000;
-  // int bottom = -2000000000;
-  // int left = 2000000000;
-  // int right = -2000000000;
-  // for(auto pt : points) {
-  //   cout << "\e[32m(" << pt.x << ", " << pt.y << ")\e[0m" << endl;
-  //   if(pt.y < top) {top = pt.y;}
-  //   else if(pt.y > bottom) {bottom = pt.y;}
-  //   if(pt.x > right) {right = pt.x;}
-  //   else if(pt.x < left) {left = pt.x;}
-  // }
-  // function<void(Argon&)> f = ([=](Argon& a) {
-  //   Polygon p(points);
-  //
-  // });
-  // if(skipCallstack) {f(*this);}
-  // else {callstack.push_back(f);}
+  //make polygon
+  Argon_Polygon poly(points);
+  Argon_Rect drawRect = poly.boundRect.boundOnScreen(window.w, window.h);
+  EdgeTable drawable;
+  for(auto e : poly.edges) {
+    if(e->min <= drawRect.y+drawRect.h) {
+      drawable.push_back(e);
+    }
+  }
+  //lambda
+  function<void(Argon&)> f = ([=](Argon& a) {
+    EdgeTable active;
+    for(auto e : drawable) {
+      if(e->min < drawRect.y) {
+        active.push_back(e);
+      }
+    }
+
+    for(int y = 0; y <= drawRect.h; ++y) {
+
+      for(auto it = active.begin(); it < active.end(); ++it) {
+        if((*it)->max == y+drawRect.y) {
+          active.erase(it--);
+        }
+      }
+      for(auto e : drawable) {
+        if(e->min == y+drawRect.y) {
+          active.push_back(e);
+        }
+      }
+      sort(active.begin(),active.end(),[](Edge* e, Edge* f){return e->curX < f->curX;});
+
+      SDL_SetRenderDrawColor(a.ren, a.fill.r, a.fill.g, a.fill.b, a.fill.a);
+      for(int i = 0; i < active.size(); i+=2) {
+        SDL_RenderDrawLine(a.ren, active[i]->curX, y+drawRect.y, active[i+1]->curX, y+drawRect.y);
+      }
+
+      for(auto e : active) {
+        e->sum += abs(e->dx);
+        while(e->sum >= abs(e->dy)) {
+          e->curX += e->msign;
+          e->sum -= abs(e->dy);
+        }
+      }
+    }
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
   //OTHER THING
     // int  nodes, nodeX[MAX_POLY_CORNERS], pixelX, pixelY, i, j, swap ;
 
@@ -994,11 +1025,11 @@ Argon_Color Argon::getPixel(int x, int y) {
 
 
 //Cached Image
-#include <chrono> 
+#include <chrono>
 using namespace std::chrono;
-auto start = high_resolution_clock::now(); 
-// auto stop = high_resolution_clock::now(); 
-// auto duration = duration_cast<microseconds>(stop - start); 
+auto start = high_resolution_clock::now();
+// auto stop = high_resolution_clock::now();
+// auto duration = duration_cast<microseconds>(stop - start);
 // duration.count();
 
 CachedImage::CachedImage(Argon& a, const char* path) : argon(a), path(path) {

@@ -1,15 +1,13 @@
 #ifndef ARGON_H
 #define ARGON_H
 
-#include <vector>
 #include <algorithm>
 #include <functional>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <iostream>
-#include "triangle.h"
 
-#include "polygon.h"
+#include "geo.h"
 
 using namespace std;
 
@@ -419,11 +417,6 @@ struct Argon_Color {
 		return *this;
 	}
 };
-struct Argon_Rect {
-	Argon_Rect(SDL_Rect& r) {x = r.x;y = r.y;w=r.w;h=r.h;}
-	Argon_Rect(int x, int y, int w, int h) : x(x), y(y), w(w), h(h) {}
-	int x; int y; int w; int h;
-};
 
 typedef function<void(Argon&,WindowEvent&)> WindowListener;
 typedef function<void(Argon&,MouseEvent&)> MouseListener;
@@ -540,7 +533,7 @@ public:
 
 	void strokeTriangle(int x1, int y1, int x2, int y2, int x3, int y3);
 	void scanLineTriangle(int x1, int y1, int x2, int y2, int x3, int y3);
-	void halfSpaceTriangle(int x1, int y1, int x2, int y2, int x3, int y3);
+	void halfSpaceTriangle(int x1, int y1, int x2, int y2, int x3, int y3); //not yet implemented
 	void triangle(int x1, int y1, int x2, int y2, int x3, int y3);
 
 	void strokeRect(int x, int y, int w, int h);

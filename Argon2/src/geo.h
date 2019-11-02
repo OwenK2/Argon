@@ -1,43 +1,113 @@
+#ifndef GEO_H
+#define GEO_H
+
+#include <vector>
+
 using namespace std;
 
-#include "triangle.h"
+struct Point {
+	int x;
+	int y;
 
-struct Edge {
-  int max;
+  Point() : x(0), y(0) {};
+  Point(int _x, int _y) : x(_x), y(_y) {};
+  ~Point() {};
+
+	void print() {
+		cout << "(" << x << ", " << y << ")" << endl;
+	}
+};
+typedef vector<Point*> Points;
+
+class Edge {
+public:
+	Point a;
+	Point b;
   int min;
-  int x;
-  int sign;
+  int max;
+  int curX;
+  int msign;
   int dx;
   int dy;
-  double sum;
+  int sum;
+
+	Edge() : max(0), min(0), curX(0), msign(0), dx(0), dy(0), sum(0) {};
+	Edge(Point _a, Point _b) {
+		a = (_a.y <= _b.y) ? _a : _b;
+		b = (_a.y > _b.y) ? _a : _b;
+		min = a.y;
+		max = b.y;
+		curX = a.x;
+		dx = b.x - a.x;
+		dy = b.y - a.y;
+		msign = (dx == 0 || dy == 0) ? 0 : ((double(dy)/double(dx) > 0) ? 1 : -1);
+		sum = 0;
+	};
+	~Edge() {};
+
   void print() {
-  	cout << "(" << max << ", " << min << ", " << x << ", " << sign << ", " << dx << ", " << dy << ", " << sum << ")" << endl;
+  	cout << "[(" << a.x << "," << a.y << "); (" << b.x << "," << b.y << ")]" << endl;
   }
 };
-typedef vector<Edge> EdgeTable;
+typedef vector<Edge*> EdgeTable;
 
-class Polygon {
+
+class Argon_Rect {
 public:
-	Polygon(Points points) {
-		EdgeTable table;
-    sort(points.begin(),points.end(),[](Point& a, Point& b){return a.x < b.x;});
-    for(auto pt : points) {
-    	pt.print();
-    }
-		for(int i = 0;i < points.size();++i) {
-    	int j = i+1 >= points.size() ? 0 : i+1, ymax,ymin,x,sign;
-    	if(points[i].y == points[j].y) {continue;}
-    	if(points[i].y > points[j].y) {ymax = points[i].y;ymin = points[j].y;x = points[j].x;}
-    	else {ymax = points[j].y;ymin = points[i].y;x = points[i].x;}
-    	sign = 1;
-    	table.push_back({ymax,ymin,x,sign,abs(points[i].x - points[j].x),abs(points[i].y - points[j].y),0});
-    }
-    sort(table.begin(),table.end(),[](Edge& a, Edge& b){return a.min < b.min;});
-    for(auto ed : table) {
-    	ed.print();
-    }
-  };
-	~Polygon() {};
+	int x;
+	int y;
+	int w;
+	int h;
+
+	Argon_Rect boundOnScreen(int sw, int sh) {
+    return Argon_Rect((x < 0) ? 0 : ((x > sw) ? sw : x), (y < 0) ? 0 : ((y > sh) ? sh : y), (x+w > sw) ? sw-x : w, (y+h > sh) ? sh-y : h);
+	}
+  Argon_Rect() : x(0), y(0), w(0), h(0) {};
+	Argon_Rect(SDL_Rect& r) {
+		x = r.x;
+		y = r.y;
+		w = r.w;
+		h = r.h;
+	}
+	Argon_Rect(int x, int y, int w, int h) : x(x), y(y), w(w), h(h) {};
+  ~Argon_Rect() {};
+};
+
+
+class Argon_Polygon {
+  public:
+    int numVertices;
+    Points points;
+    EdgeTable edges;
+    Argon_Rect boundRect;
+
+    Argon_Polygon(Points _points) : numVertices(_points.size()), points(_points) {
+      //get drawable bounding rect
+      int top = 2147483647; //MAX_INT
+      int bottom = 0;
+      int left = 2147483647; //MAX_INT
+      int right = 0;
+      for(auto p : points) {
+        top = std::min(top, p->y);
+        bottom = std::max(bottom, p->y);
+        left = std::min(left, p->x);
+        right = std::max(right, p->x);
+      }
+      boundRect = Argon_Rect(left, top, right-left, bottom-top);
+
+		  for(int i = 0;i < points.size();++i) {
+    	   int j = i+1 >= points.size() ? 0 : i+1;
+         Edge* e = new Edge(*(points.at(i)), *(points.at(j)));
+         edges.push_back(e);
+      }
+      sort(edges.begin(),edges.end(),[](Edge* e, Edge* f){return e->min < f->min;});
+    };
+
+	  ~Argon_Polygon() {
+      for(auto e : edges) {
+        delete e;
+      }
+    };
 };
 
     //     // Create edge table
@@ -106,5 +176,7 @@ public:
 // // @param x - x coordinates
 // // @param y - y coordinates
 // ///
-// drawPolygon(n, x[], y[]) {
+// drawArgon_Polygon(n, x[], y[]) {
 // }
+
+#endif
