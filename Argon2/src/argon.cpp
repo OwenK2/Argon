@@ -659,6 +659,97 @@ void Argon::line(int x1, int y1, int x2, int y2) {
   else {callstack.push_back(f);}
 }
 
+void Argon::quadraticBezier(int x1, int y1, int cpx, int cpy, int x2, int y2) {
+  //overestimate the number of values of t we need to use to make our curve
+  int totalDelX = abs(cpx - x1) + abs(x2 - cpx);
+  int totalDelY = abs(cpy - y1) + abs(y2 - cpy);
+  int steps = totalDelX + totalDelY;
+
+  //calculate how much t will change by for each step
+  double delT = double(1)/double(steps);
+
+  function<void(Argon&)> f = ([=](Argon& a) {
+    SDL_SetRenderDrawColor(a.ren, a.stroke.r, a.stroke.g, a.stroke.b, a.stroke.a);
+    //draw curve
+    int prevX = x1;
+    int prevY = y1;
+    for(double t = 0; t <= 1; t += delT) {
+      int nextX = int(round(cpx + (1-t)*(1-t)*(x1-cpx) + t*t*(x2-cpx)));
+      int nextY = int(round(cpy + (1-t)*(1-t)*(y1-cpy) + t*t*(y2-cpy)));
+      SDL_RenderDrawLine(a.ren, prevX, prevY, nextX, nextY);
+      prevX = nextX;
+      prevY = nextY;
+    }
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
+void Argon::cubicBezier(int x1, int y1, int cpx1, int cpy1, int cpx2, int cpy2, int x2, int y2) {
+  //overestimate the number of values of t we need to use to make our curve
+  int totalDelX = abs(x1 - cpx1) + abs(cpx1 - cpx2) + abs(x2 - cpx2);
+  int totalDelY = abs(y1 - cpy1) + abs(cpy1 - cpy2) + abs(y2 - cpy2);
+  int steps = totalDelX + totalDelY;
+
+  //calculate how much t will change by for each step
+  double delT = double(1)/double(steps);
+
+  function<void(Argon&)> f = ([=](Argon& a) {
+    SDL_SetRenderDrawColor(a.ren, a.stroke.r, a.stroke.g, a.stroke.b, a.stroke.a);
+    //draw curve
+    int prevX = x1;
+    int prevY = y1;
+    for(double t = 0; t <= 1; t += delT) {
+      int nextX = int(round((1 - t)*(1 - t)*(1 - t)*x1 + 3*(1 - t)*(1 - t)*(t*cpx1) + 3*(1 - t)*t*t*cpx2 + t*t*t*x2));
+      int nextY = int(round((1 - t)*(1 - t)*(1 - t)*y1 + 3*(1 - t)*(1 - t)*(t*cpy1) + 3*(1 - t)*t*t*cpy2 + t*t*t*y2));
+      SDL_RenderDrawLine(a.ren, prevX, prevY, nextX, nextY);
+      prevX = nextX;
+      prevY = nextY;
+    }
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
+void Argon::nicBezier(Points& pts) {
+  int n = pts.size() - 1;
+  if(n <= 0) {
+    return;
+  }
+  //overestimate the number of values of t we need to use to make our curve
+  int totalDelX = abs(pts.back()->x - pts.at(0)->x);
+  int totalDelY = abs(pts.back()->y - pts.at(0)->y);
+  for(auto p = 0; p < n; ++p) {
+    totalDelX += abs(pts.at(p+1)->x - pts.at(p)->x);
+    totalDelY += abs(pts.at(p+1)->y - pts.at(p)->y);
+  }
+  int steps = totalDelX + totalDelY;
+
+  //calculate how much t will change by for each step
+  double delT = double(1)/double(steps);
+
+  function<void(Argon&)> f = ([=](Argon& a) {
+    SDL_SetRenderDrawColor(a.ren, a.stroke.r, a.stroke.g, a.stroke.b, a.stroke.a);
+    //draw curve
+    int prevX = pts.at(0)->x;
+    int prevY = pts.at(0)->y;
+    for(double t = 0; t <= 1; t += delT) {
+      double nextX = 0;
+      double nextY = 0;
+      for(int i = 0; i <= n; ++i) {
+        double nCi = tgamma(double(n+1))/(tgamma(double(i+1))*tgamma(double(n-i+1)));
+        double t_a = pow(1-t, double(n-i));
+        double t_b = pow(t, double(i));
+        nextX += nCi*t_a*t_b*pts.at(i)->x;
+        nextY += nCi*t_a*t_b*pts.at(i)->y;
+      }
+      SDL_RenderDrawLine(a.ren, prevX, prevY, int(round(nextX)), int(round(nextY)));
+      prevX = int(round(nextX));
+      prevY = int(round(nextY));
+    }
+  });
+  if(skipCallstack) {f(*this);}
+  else {callstack.push_back(f);}
+}
+
 void Argon::strokeCircle(int cx, int cy, int r) {
   function<void(Argon&)> f = ([=](Argon& a) {
     int x = r;

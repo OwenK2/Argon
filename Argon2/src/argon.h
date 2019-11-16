@@ -1,6 +1,7 @@
 #ifndef ARGON_H
 #define ARGON_H
 
+#include <cmath>
 #include <algorithm>
 #include <functional>
 #include <SDL2/SDL.h>
@@ -527,6 +528,10 @@ public:
 	void point(int x, int y);
 
 	void line(int x1, int y1, int x2, int y2);
+
+	void quadraticBezier(int x1, int y1, int cpx, int cpy, int x2, int y2);
+	void cubicBezier(int x1, int y1, int cpx1, int cpy1, int cpx2, int cpy2, int x2, int y2);
+	void nicBezier(Points& pts);
 
 	void strokeCircle(int x, int y, int r);
 	void circle(int x, int y, int r);

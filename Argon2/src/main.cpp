@@ -18,20 +18,14 @@ int main(int argc, char* argv[]) {
 
 		//render
 		a.image("./src/test.jpg", x,y,a.window.w,a.window.h);
-		a.setFill(0, 0, 255);
-		//a.halfSpaceTriangle(10, 10, 15, 60, 50, 50);
-		a.triangle(10, 10, 15, 60, 50, 50);
-		a.setFill(0, 255, 0);
-		// a.point(10, 10);
-		// a.point(15, 60);
-		// a.point(50, 50);
 
-		a.rect(0,0,10,10);
+		Points pts = {new Point(10, 10), new Point(100, 200), new Point(200, 300), new Point(300, 200), new Point(400, 400)};
 
-		Points pts = {new Point(250, 100), new Point(100, 200), new Point(200, 300), new Point(300, 200), new Point(400, 300)};
-
-		a.setFill(255, 0, 0);
-		a.polygon(pts);
+		a.setStroke(0, 255, 0);
+		a.nicBezier(pts);
+		a.setStroke(255, 255, 255);
+		a.point(10, 10);
+		a.point(400, 400);
 
 		//events
 		// if(a.keyboard.state[SDL_SCANCODE_UP]) {
