@@ -24,8 +24,8 @@ int main(int argc, char* argv[]) {
 		a.setStroke(0, 255, 0);
 		a.nicBezier(pts);
 		a.setStroke(255, 255, 255);
-		a.point(10, 10);
-		a.point(400, 400);
+
+		a.polygon(pts);
 
 		//events
 		// if(a.keyboard.state[SDL_SCANCODE_UP]) {
