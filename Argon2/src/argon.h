@@ -6,6 +6,7 @@
 #include <functional>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <iostream>
 
 #include "geo.h"
@@ -22,6 +23,7 @@ using namespace std;
 #define ARGON_HIGHDPI 64
 #define ARGON_NOQUIT 128
 #define ARGON_IMAGES 256
+#define ARGON_TEXT 528
 
 #define ARGON_BASIC 72
 
@@ -272,13 +274,14 @@ class Argon;
 class CachedImage;
 
 enum EventType {
+	LOAD,
 	QUIT,
 	CLOSE,
 	SHOWN,
 	HIDDEN,
 	EXPOSED,
 	MOVED,
-	RESIZED,
+	RESIZE,
 	SIZECHANGED,
 	MINIMIZED,
 	MAXIMIZED,
@@ -427,162 +430,202 @@ typedef function<void(Argon&,FileEvent&)> FileListener;
 typedef function<void(Argon&)> Task;
 typedef vector<Task> Tasklist;
 
+typedef TTF_Font* Font; //always use pointer to TTF_Font
+typedef vector<Font> Fonts;
+
 
 class Argon {
-private:
-	int fps;
-	double frameTime;
-	bool canCountClick = false;
-	bool quitOnClose = true;
-	bool skipCallstack = false;
-	bool useImages = false;
-	Argon_Color bg = {0,0,0,0};
-	Argon_Color fill = {255,255,255,255};
-	Argon_Color stroke = {255,255,255,255};
-	uint32_t lastClick;
-	SDL_Window* win;
-	SDL_Renderer* ren;
-	SDL_Surface* surface;
+	private:
+		int fps;
+		double frameTime;
+		bool canCountClick = false;
+		bool quitOnClose = true;
+		bool skipCallstack = false;
+		bool useImages = false;
+		bool useText = false;
+		Argon_Color bg = {0,0,0,0};
+		Argon_Color fill = {255,255,255,255};
+		Argon_Color stroke = {255,255,255,255};
+		uint32_t lastClick;
+		SDL_Window* win;
+		SDL_Renderer* ren;
+		SDL_Surface* surface;
 
-	//Listeners
-	vector<WindowListener*> quitListeners;
-	vector<WindowListener*> closeListeners;
-	vector<WindowListener*> shownListeners;
-	vector<WindowListener*> hiddenListeners;
-	vector<WindowListener*> exposedListeners;
-	vector<WindowListener*> movedListeners;
-	vector<WindowListener*> resizedListeners;
-	vector<WindowListener*> sizeChangedListeners;
-	vector<WindowListener*> minimizedListeners;
-	vector<WindowListener*> maximizedListeners;
-	vector<WindowListener*> restoredListeners;
-	vector<WindowListener*> focusListeners;
-	vector<WindowListener*> blurListeners;
-	vector<WindowListener*> takeFocusListeners;
-	vector<WindowListener*> hitTestListeners;
-	vector<MouseListener*> mouseEnterListeners;
-	vector<MouseListener*> mouseLeaveListeners;
-	vector<MouseListener*> mouseUpListeners;
-	vector<MouseListener*> mouseDownListeners;
-	vector<MouseListener*> mouseMoveListeners;
-	vector<MouseListener*> clickListeners;
-	vector<MouseListener*> dblclickListeners;
-	vector<KeyboardListener*> keyUpListeners;
-	vector<KeyboardListener*> keyDownListeners;
-	vector<WheelListener*> mouseWheelListeners;
-	vector<FileListener*> dropFileListeners;
+		//Listeners
+		WindowListener* loadListener = NULL;
+		WindowListener* quitListener = NULL;
+		WindowListener* closeListener = NULL;
+		WindowListener* shownListener = NULL;
+		WindowListener* hiddenListener = NULL;
+		WindowListener* exposedListener = NULL;
+		WindowListener* movedListener = NULL;
+		WindowListener* resizeListener = NULL;
+		WindowListener* sizeChangedListener = NULL;
+		WindowListener* minimizedListener = NULL;
+		WindowListener* maximizedListener = NULL;
+		WindowListener* restoredListener = NULL;
+		WindowListener* focusListener = NULL;
+		WindowListener* blurListener = NULL;
+		WindowListener* takeFocusListener = NULL;
+		WindowListener* hitTestListener = NULL;
+		MouseListener* mouseEnterListener = NULL;
+		MouseListener* mouseLeaveListener = NULL;
+		MouseListener* mouseUpListener = NULL;
+		MouseListener* mouseDownListener = NULL;
+		MouseListener* mouseMoveListener = NULL;
+		MouseListener* clickListener = NULL;
+		MouseListener* dblclickListener = NULL;
+		KeyboardListener* keyUpListener = NULL;
+		KeyboardListener* keyDownListener = NULL;
+		WheelListener* mouseWheelListener = NULL;
+		FileListener* dropFileListener = NULL;
 
-	//Cache
-	vector<CachedImage*> imageCache;
+		//Cache
+		vector<CachedImage*> imageCache;
 
-	//Tasklist
-	Tasklist tasklist;
-	Tasklist callstack;
+		//Tasklist
+		Task* mainLoop = NULL;
+		Tasklist callstack;
 
 
 
-	//Hidden Functions
-	void init(int x, int y, int w, int h, int flags);
+		//Hidden Functions
+		void init(int x, int y, int w, int h, int flags);
 
-	static int eventWatcher(void* data, SDL_Event* e);
+		void eventWatcher(SDL_Event* e);
+		static int resizeWatcher(void* data, SDL_Event* e);
 
-	friend class CachedImage;
+		friend class CachedImage;
 
-public:
-	const char* name;
-	bool running = false;
-	int dblClickTime = 400;
-	string lastError = "";
-	Window window = {-1, -1, -1, -1, -1, -1, 0};
-	Mouse mouse = {0,0,0,0,0,0,0,false};
-	Keyboard keyboard = {-1,"",{},false,false,false,false,false,false,false,false,false,false,false,false,false,false};
+		Fonts fonts;
 
-	Argon(const char* name, int fps, int flags);
-	Argon(const char* name, int w, int h, int fps, int flags);
-	Argon(const char* name, int x, int y, int w, int h, int fps, int flags);
+	public:
+		const char* name;
+		bool running = false;
+		int dblClickTime = 400;
+		string lastError = "";
+		Window window = {-1, -1, -1, -1, -1, -1, 0};
+		Mouse mouse = {0,0,0,0,0,0,0,false};
+		Keyboard keyboard = {-1,"",{},false,false,false,false,false,false,false,false,false,false,false,false,false,false};
 
-	~Argon();
+		Argon(const char* name, int fps, int flags);
+		Argon(const char* name, int w, int h, int fps, int flags);
+		Argon(const char* name, int x, int y, int w, int h, int fps, int flags);
 
-	void start();
-	void quit();
-	void close();
+		~Argon();
 
-	void addWindowListener(EventType type, WindowListener listener);
-	void addMouseListener(EventType type, MouseListener listener);
-	void addKeyboardListener(EventType type, KeyboardListener listener);
-	void addWheelListener(EventType type, WheelListener listener);
-	void addFileListener(EventType type, FileListener listener);
+		void start();
+		void quit();
+		void close();
 
-	bool removeListener(EventType type, int index);
+		void addWindowListener(EventType type, WindowListener listener);
+		void addMouseListener(EventType type, MouseListener listener);
+		void addKeyboardListener(EventType type, KeyboardListener listener);
+		void addWheelListener(EventType type, WheelListener listener);
+		void addFileListener(EventType type, FileListener listener);
 
-	void addLoop(Task task);
-	bool removeLoop(int index);
+		void removeListener(EventType type);
 
-	void setFps(int _fps);
-	int getFps();
+		void addLoop(Task task);
+		void removeLoop();
 
-	//Add draw to call stack
-	void clear();
-	void clear(int x, int y, int w, int h);
+		void setFps(int _fps);
+		int getFps();
 
-	void point(int x, int y);
+		//Add draw to call stack
+		void clear();
+		void clear(int x, int y, int w, int h);
 
-	void line(int x1, int y1, int x2, int y2);
+		void point(int x, int y);
 
-	void quadraticBezier(int x1, int y1, int cpx, int cpy, int x2, int y2);
-	void cubicBezier(int x1, int y1, int cpx1, int cpy1, int cpx2, int cpy2, int x2, int y2);
-	void nicBezier(Points& pts);
+		void line(int x1, int y1, int x2, int y2);
 
-	void strokeCircle(int x, int y, int r);
-	void circle(int x, int y, int r);
+		void quadraticBezier(int x1, int y1, int cpx, int cpy, int x2, int y2);
+		void cubicBezier(int x1, int y1, int cpx1, int cpy1, int cpx2, int cpy2, int x2, int y2);
+		void nicBezier(Points& pts);
 
-	void strokeTriangle(int x1, int y1, int x2, int y2, int x3, int y3);
-	void scanLineTriangle(int x1, int y1, int x2, int y2, int x3, int y3);
-	void halfSpaceTriangle(int x1, int y1, int x2, int y2, int x3, int y3); //not yet implemented
-	void triangle(int x1, int y1, int x2, int y2, int x3, int y3);
+		void strokeCircle(int x, int y, int r);
+		void circle(int x, int y, int r);
 
-	void strokeRect(int x, int y, int w, int h);
-	void rect(int x, int y, int w, int h);
+		void strokeTriangle(int x1, int y1, int x2, int y2, int x3, int y3);
+		void scanLineTriangle(int x1, int y1, int x2, int y2, int x3, int y3);
+		void halfSpaceTriangle(int x1, int y1, int x2, int y2, int x3, int y3); //not yet implemented
+		void triangle(int x1, int y1, int x2, int y2, int x3, int y3);
 
-	void strokePolygon(Points& points);
-	void polygon(Points& points);
+		void strokeRect(int x, int y, int w, int h);
+		void rect(int x, int y, int w, int h);
 
-	Argon_Rect image(const char* path, int x, int y);
-	Argon_Rect image(const char* path, int x, int y, int w, int h);
-	Argon_Rect image(const char* path, int sx, int sy, int sw, int sh, int dx, int dy,int dw,int dh);
+		void strokePolygon(Points& points);
+		void polygon(Points& points);
 
-	void setBackground(Argon_Color color);
-	void setBackground(int r, int g, int b, int a = 255);
+		Argon_Rect image(const char* path, int x, int y);
+		Argon_Rect image(const char* path, int x, int y, int w, int h);
+		Argon_Rect image(const char* path, int sx, int sy, int sw, int sh, int dx, int dy,int dw,int dh);
 
-	void setStroke(Argon_Color color);
-	void setStroke(int r, int g, int b, int a = 255);
+		void addFont(const char* path, int ptsize, long index = 0);
+		//TTF_Font* TTF_OpenFont(const char* file, int ptsize);
+		//TTF_Font* TTF_OpenFontIndex(const char* file, int ptsize, long index);
+		void setFontStyle(Font font, int style);
+		//TTF_STYLE_BOLD
+		//TTF_STYLE_ITALIC
+		//TTF_STYLE_UNDERLINE
+		//TTF_STYLE_STRIKETHROUGH
+		//TTF_STYLE_NORMAL
+		//ex. TTF_SetFontStyle(myFont, TTF_STYLE_BOLD | TTF_STYLE_UNDERLINE);
+		int getFontStyle(Font font);
+		//int TTF_GetFontStyle(TTF_Font *font);
+		//ex. if (myFontStyles & TTF_STYLE_BOLD) {...}
+		void setFontOutline(Font font, int pixelWidth);
+		//void TTF_SetFontOutline(TTF_Font *font, int outline);
+		int getFontOutline(Font font);
+		//int TTF_GetFontOutline(TTF_Font *font);
+		void setKerning(Font font, int allowed = 0); // 0 = off, any other int = on
+		//void TTF_SetFontKerning(TTF_Font *font, int allowed);
+		int getKerning(Font font);
+		//int TTF_GetFontKerning(TTF_Font *font);
+		void removeFont(Font font);
+		//void TTF_CloseFont(TTF_Font *font);
+		//also must remove from Argon.fonts
+		Argon_Rect text(Font font, const char* text, Argon_Color c, bool antiAliasing = false, bool boxed = false);
+		//SDL_Surface *TTF_RenderGlyph_Solid/Shaded/Blended(TTF_Font *font, Uint16 ch, SDL_Color fg);
+		//SDL_Surface *TTF_RenderText_Solid/Shaded/Blended(TTF_Font *font, const char *text, SDL_Color fg);
+		//SDL_Surface *TTF_RenderUTF8_Solid/Shaded/Blended(TTF_Font *font, const char *text, SDL_Color fg);
+		//SDL_Surface *TTF_RenderUNICODE_Solid/Shaded/Blended(TTF_Font *font, const Uint16 *text, SDL_Color fg);
 
-	void setFill(Argon_Color color);
-	void setFill(int r, int g, int b, int a = 255);
+		void setBackground(Argon_Color color);
+		void setBackground(int r, int g, int b, int a = 255);
 
-	void wait(int ms);
+		void setStroke(Argon_Color color);
+		void setStroke(int r, int g, int b, int a = 255);
 
-	void messageBox(const char* title,const char* message, uint32_t flags = ARGON_MESSAGE_INFO);
-	Argon_Color getPixel(int x, int y);
+		void setFill(Argon_Color color);
+		void setFill(int r, int g, int b, int a = 255);
+
+		void wait(int ms);
+
+		void messageBox(const char* title,const char* message, uint32_t flags = ARGON_MESSAGE_INFO);
+		Argon_Color getPixel(int x, int y);
+		void putRGB(uint8_t* pixels, int x = 0, int y = 0, int w = -1, int h = -1);
+		void putRGBA(uint8_t* pixels, int x = 0, int y = 0, int w = -1, int h = -1);
 };
 
 
-//Friend Classes
+	//Friend Classes
 
 class CachedImage {
-public:
-	bool loaded;
-	int w;
-	int h;
-	const char* path;
-	// SDL_Surface* img;
-	SDL_Texture* img;
-	Argon& argon;
+	public:
+		bool loaded;
+		int w;
+		int h;
+		const char* path;
+		// SDL_Surface* img;
+		SDL_Texture* img;
+		Argon& argon;
 
-	CachedImage(Argon& a, const char* path);
-	~CachedImage();
-	Argon_Rect draw(int sx, int sy, int sw, int sh, int dx, int dy,int dw, int dh);
-	void remove();
+		CachedImage(Argon& a, const char* path);
+		~CachedImage();
+		Argon_Rect draw(int sx, int sy, int sw, int sh, int dx, int dy,int dw, int dh);
+		void remove();
 };
 
 #endif
