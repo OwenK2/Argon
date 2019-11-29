@@ -5,7 +5,6 @@ Known Bugs
 	- MOUSEUP triggered on MOUSELEAVE & MOUSEENTER
 	- messageBox fails if sent variables
 	- resize is messed
-	- shit blinks
 	-!!!!!!!!!!!!!MAYBE ADD CACHED OBJECTS!!!!!!!!!!!!!
 	- No lambda function for getPixel
 	- Delete images from cashe if not in use or if cashe excedes max number
