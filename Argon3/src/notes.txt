@@ -1,0 +1,17 @@
+THINGS TO DO / REMEMBER
+	- MouseLeave/MouseEnter trigger a MouseUp
+	- create datastructure like bool array to store if keys are pressed down
+
+
+
+PLAN FOR NEW ARGON
+	- Create an argon shape class where the user can
+	create a shape and add features to it
+	like so
+
+	Argon_Shape shape(h,w);
+	shape.addLine(x,y,x,y);
+	shape.render();
+
+	and uses textures that way the user can efficently store
+	the shape class
