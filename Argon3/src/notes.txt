@@ -1,6 +1,8 @@
 THINGS TO DO / REMEMBER
 	- MouseLeave/MouseEnter trigger a MouseUp
 	- create datastructure like bool array to store if keys are pressed down
+	- messageBox fails if sent variables (Test this)
+	- resize is messed
 
 
 
