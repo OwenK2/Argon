@@ -1,10 +1,12 @@
 #ifndef ARGON_H
 #define ARGON_H
 
+
 #include <functional>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#define round(x) x < 0 ? (int)(x - 0.5f) : (int)(x + 0.5f)
 
 //WINDOW FLAGS
 #define ARGON_FULLSCREEN 1
@@ -155,12 +157,24 @@ struct Mouse {
 	bool wdown;
 	uint8_t which;
 };
-
-struct Argon_Color {
+struct Argon_HSL;
+struct Argon_RGB {
 	uint8_t r = 0;
 	uint8_t g = 0;
 	uint8_t b = 0;
 	uint8_t a = 0;
+	Argon_RGB() {}
+	Argon_RGB(uint8_t r,uint8_t g,uint8_t b,uint8_t a = 255) : r(r), g(g), b(b), a(a) {};
+	Argon_HSL toHSL();
+};
+struct Argon_HSL {
+	float h = 0;
+	float s = 0;
+	float l = 0;
+	float a = 0;
+	Argon_HSL() {}
+	Argon_HSL(float h,float s,float l,float a = 255) : h(h), s(s), l(l), a(a) {};
+	Argon_RGB toRGB();
 };
 struct Argon_Rect {
 	int x, y, w, h;
@@ -183,14 +197,11 @@ private:
 	bool running = false;
 	double frameTime;
 	bool quitOnClose = true;
-	bool canCountClick = false;
 	bool imagesEnabled = false;
-	uint16_t dblClickTime = 400;
-	uint32_t lastClick = 0;
-	Argon_Color bgColor = {0,0,0,0};
-	Argon_Color fillColor = {255,255,255,255};
-	Argon_Color strokeColor = {255,255,255,255};
-	int strokeWeight = 1;
+	Argon_RGB bgColor = {0,0,0,0};
+	Argon_RGB fillColor = {255,255,255,255};
+	Argon_RGB strokeColor = {255,255,255,255};
+	uint8_t strokeWeight = 1;
 	bool doFill = true;
 	bool doStroke = true;
 
@@ -251,9 +262,10 @@ public:
 	void resume();
 	void close();
 	void quit();
+	void setIcon(const char* file);
 	void grabMouse(bool grab);
-	void notification(const char* title, const char* msg, MSGBoxType type);
-	int prompt(const char* title, const char* msg, int numBtns, Argon_Button* buttons, MSGBoxType type);
+	void notification(const char* title, const char* msg, MSGBoxType type = MSG_INFO);
+	int prompt(const char* title, const char* msg, int numBtns, Argon_Button* buttons, MSGBoxType type = MSG_INFO);
 
 	//Loop API
 	void setLoop(Task loop);
@@ -267,15 +279,14 @@ public:
 	void setListener(EventType type, WheelListener listner);
 	void setListener(EventType type, FileListener listner);
 	void removeListener(EventType type);
-	void setDblClickDebounce(uint16_t time);
 
 	//Drawing API
 	void clear();
 	void point(int x, int y);
 	void line(int x1, int y1, int x2, int y2);
 	void circle(int cx, int cy, int r);
-	Argon_Color getPixel(int x, int y);
-	void putPixel(int x, int y, Argon_Color& color);
+	Argon_RGB getPixel(int x, int y);
+	void putPixel(int x, int y, Argon_RGB& color);
 	void getPixelData(uint8_t* data, Argon_Rect* rect = NULL);
 	void putPixelData(uint8_t* data, Argon_Rect* rect = NULL);
 	void getPixelData(uint8_t* data, int x, int y, int w, int h);
@@ -287,12 +298,12 @@ public:
 	void stroke();
 	void noStroke();
 	void setFill(uint8_t r,uint8_t g,uint8_t b,uint8_t a = 255);
-	void setFill(Argon_Color& color);
+	void setFill(Argon_RGB& color);
 	void setStroke(uint8_t r,uint8_t g,uint8_t b,uint8_t a = 255);
-	void setStroke(Argon_Color& color);
+	void setStroke(Argon_RGB& color);
 	void setBackground(uint8_t r,uint8_t g,uint8_t b,uint8_t a = 255);
-	void setBackground(Argon_Color& color);
-	void setStrokeWeight(int weight);
+	void setBackground(Argon_RGB& color);
+	void setStrokeWeight(uint8_t weight);
 
 	//Color modifier functions go here
 	//- hue rotate
@@ -304,6 +315,7 @@ public:
 
 friend class Argon_Drawable;
 friend class Argon_Image;
+friend class Argon_Shape;
 };
 
 class Argon_Drawable {
@@ -317,23 +329,20 @@ protected:
 	SDL_Rect* crop_ptr = NULL;
 	SDL_Point center;
 	SDL_Point* center_ptr = NULL;
-	
+
 
 	Argon& context;
 	SDL_Texture* texture;
 
 public:
+
 	Argon_Drawable(Argon& context, SDL_Texture* texture);
 	virtual ~Argon_Drawable();
 
 	void render(Argon_Rect* rect = NULL);
 	void render(int x, int y);
 	void render(int x, int y, int w, int h);
-	void render(int& x, int& y, int& w, int& h);
-	void renderEx(double angle, Argon_Flip flip = ARGON_FLIP_NONE);
-	void renderEx(Argon_Rect* rect = NULL, double angle = 0, Argon_Flip flip = ARGON_FLIP_NONE);
-	void setAlpha(uint8_t alpha);
-	uint8_t getAlpha();
+
 	void modifyColor(uint8_t r, uint8_t g, uint8_t b);
 	void setAngle(double angle);
 	double getAngle();
@@ -344,6 +353,14 @@ public:
 	void resetCrop();
 	void setRotateCenter(int cx, int cy);
 	void resetRotateCenter();
+	void setAlpha(uint8_t alpha);
+	uint8_t getAlpha();
+
+	void addDrawable(Argon_Drawable& other);
+
+	int width();
+	int height();
+	void getSize(int* w, int* h);
 };
 
 class Argon_Image : public Argon_Drawable {
@@ -351,10 +368,23 @@ private:
 	const char* path;
 public:
 	Argon_Image(Argon& context, const char* path);
-
 	const char* getFileName();
-	void queryImage(int* w, int* h);
+
 };
+
+class Argon_Shape : public Argon_Drawable {
+private:
+	SDL_Surface* surface;
+public:
+	Argon_Shape(Argon& context, int w, int h);
+	~Argon_Shape();
+
+	void updateTexture();
+	void setPixel(int x, int y, Argon_RGB& color);
+	void hLine(int y, int x1, int x2, Argon_RGB& color);
+	void vLine(int x, int y1, int y2, Argon_RGB& color);
+};
+
 
 
 #endif

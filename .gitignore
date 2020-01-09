@@ -32,3 +32,6 @@
 *.app
 
 *.DS_Store
+
+old_attempts
+build
