@@ -900,59 +900,59 @@ void Argon_Shape::vLine(int x, int y1, int y2, Argon_RGB& color) {
   }
 }
 
-Argon_HSL Argon_RGB::toHSL() {
-  float H, S, L;
-  float R = r / 255.0;
-  float G = g / 255.0;
-  float B = b / 255.0;
-  float& max = (R > G ? (R > B ? R : B) : (G > B ? G : B));
-  float& min = (R < G ? (R < B ? R : B) : (G < B ? G : B));
+// Argon_HSL Argon_RGB::toHSL() {
+//   float H, S, L;
+//   float R = r / 255.0;
+//   float G = g / 255.0;
+//   float B = b / 255.0;
+//   float& max = (R > G ? (R > B ? R : B) : (G > B ? G : B));
+//   float& min = (R < G ? (R < B ? R : B) : (G < B ? G : B));
 
-  L = (max + min) / 2.0f;
-  if(max == min) {
-    H = 0;
-    S = 0;
-  }
-  else {
-    if(L < 0.5f) {
-      S = (max-min) / (max+min);
-    }
-    else {
-      S = (max-min) / (2.0f-max-min);
-    }
+//   L = (max + min) / 2.0f;
+//   if(max == min) {
+//     H = 0;
+//     S = 0;
+//   }
+//   else {
+//     if(L < 0.5f) {
+//       S = (max-min) / (max+min);
+//     }
+//     else {
+//       S = (max-min) / (2.0f-max-min);
+//     }
 
-    if(&max == &R) {
-      H = (G-B)/(max-min) * 60.0f;
-    }
-    else if(&max == &G) {
-      H = (2.0 + (B-R)/(max-min)) * 60.0f;
-    }
-    else {
-      H = (4.0 + (R-G)/(max-min)) * 60.0f;
-    }
-    if(H < 0) {H += 360;}
-  }
-  return {H,S,L,a / 255.0f};
-}
-Argon_RGB Argon_HSL::toRGB() {
-  if(s == 0) {
-    return {(uint8_t)(l*255.0), (uint8_t)(l*255.0), (uint8_t)(l*255.0), (uint8_t)(a*255.0)};
-  }
-  else {
-ry_1 = Luminance x (1.0+Saturation)
-If Luminance is equal or larger then 0.5 (50%) then temporary_1 = Luminance + Saturation – Luminance x Saturation
-    float t1;
-    if(l < .5) {
-      t1 = l * (1 + s);
-    }
-    else {
-      t1 = l + s - l * s;
-    }
-    float t2 = 2 * l - t1;
-    float hue = h / 360.0f;
-    float r = hue + 0.333;
-    float g = hue = 0.536;
-    float b = hue – 0.333;
+//     if(&max == &R) {
+//       H = (G-B)/(max-min) * 60.0f;
+//     }
+//     else if(&max == &G) {
+//       H = (2.0 + (B-R)/(max-min)) * 60.0f;
+//     }
+//     else {
+//       H = (4.0 + (R-G)/(max-min)) * 60.0f;
+//     }
+//     if(H < 0) {H += 360;}
+//   }
+//   return {H,S,L,a / 255.0f};
+// }
+// Argon_RGB Argon_HSL::toRGB() {
+//   if(s == 0) {
+//     return {(uint8_t)(l*255.0), (uint8_t)(l*255.0), (uint8_t)(l*255.0), (uint8_t)(a*255.0)};
+//   }
+//   else {
+// ry_1 = Luminance x (1.0+Saturation)
+// If Luminance is equal or larger then 0.5 (50%) then temporary_1 = Luminance + Saturation – Luminance x Saturation
+//     float t1;
+//     if(l < .5) {
+//       t1 = l * (1 + s);
+//     }
+//     else {
+//       t1 = l + s - l * s;
+//     }
+//     float t2 = 2 * l - t1;
+//     float hue = h / 360.0f;
+//     float r = hue + 0.333;
+//     float g = hue = 0.536;
+//     float b = hue – 0.333;
     
-  }
-}
+//   }
+// }
