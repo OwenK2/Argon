@@ -6,7 +6,7 @@ CFLAGS		:= -std=c++17 -g
 SRCEXT		:= cpp
 SOURCES 	:= $(wildcard $(SRCDIR)/*.$(SRCEXT))
 OBJECTS		:= $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(SOURCES:.$(SRCEXT)=.o))
-LIB 			:= -lSDL2 -lSDL2_image -lSDL2_ttf
+LIB 			:= -lSDL2
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@printf "\e[33m\e[1mBuilding...\e[0m\n";
