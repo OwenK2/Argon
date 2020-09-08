@@ -15,6 +15,7 @@ private:
 	uint32_t w = 500;
 	uint32_t h = 500;
 
+	//Event System
 
 public:
 	Argon();
