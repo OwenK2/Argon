@@ -31,7 +31,7 @@ typedef SDL_MessageBoxButtonData ButtonData;
 struct Event {
 	uint32_t timestamp;
 };
-struct WindowEvent : Event{
+struct WindowEvent : Event {
 	int32_t x;
 	int32_t y;
 	int32_t w;
@@ -96,7 +96,7 @@ public:
 	  SDL_DestroyTexture(backbuffer);
 		SDL_DestroyRenderer(renderer);
 		SDL_DestroyWindow(window);
-	  // SDL_DelEventWatch(handleResize, this);
+	  SDL_DelEventWatch(handleResize, this);
 		SDL_Quit();
 	}
 
@@ -143,7 +143,7 @@ public:
     SDL_SetRenderTarget(renderer, backbuffer);
   	
     SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
-    // SDL_AddEventWatch(handleResize, this);
+    SDL_AddEventWatch(handleResize, this);
     
   	_running = true;
 
@@ -289,7 +289,7 @@ private:
 		SDL_Rect windowRect = {0};
 	#endif
 	uint16_t flags; 		// only for init (other functions may change later)
-	const char* title;  // only for init (other functions may change later
+	const char* title;  // only for init (other functions may change later)
 	int32_t _x;
 	int32_t _y;
 	int32_t _w;
