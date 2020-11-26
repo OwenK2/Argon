@@ -22,7 +22,7 @@ void App::onMouseDown(const MouseButtonEvent event) {
 
 void App::onMouseMove(const MouseEvent event) {
 	if(event.down) {
-		murphy2(sx, sy, event.x, event.y, 10);
+		line(sx, sy, event.x, event.y);
 		sx = event.x;
 		sy = event.y;
 	}

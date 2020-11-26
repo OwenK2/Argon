@@ -96,7 +96,7 @@ public:
 	  SDL_DestroyTexture(backbuffer);
 		SDL_DestroyRenderer(renderer);
 		SDL_DestroyWindow(window);
-	  SDL_DelEventWatch(handleResize, this);
+	  // SDL_DelEventWatch(handleResize, this);
 		SDL_Quit();
 	}
 
@@ -143,7 +143,7 @@ public:
     SDL_SetRenderTarget(renderer, backbuffer);
   	
     SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
-    SDL_AddEventWatch(handleResize, this);
+    // SDL_AddEventWatch(handleResize, this);
     
   	_running = true;
 
@@ -264,6 +264,7 @@ public:
 	// Graphics
 	void setColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) {SDL_SetRenderDrawColor(renderer, r,g,b,a);}
 	void clear() {SDL_RenderClear(renderer);}
+	
 	void pixel(int32_t x, int32_t y) {
 		TRANSLATE_PIXEL(x, y);
 		SDL_RenderDrawPoint(renderer, x, y);
@@ -272,138 +273,6 @@ public:
 		TRANSLATE_PIXEL(x1, y1);
 		TRANSLATE_PIXEL(x2, y2);
 		SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
-	}
-	void murphy(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint8_t thickness) {
-		TRANSLATE_PIXEL(x1, y1);
-		TRANSLATE_PIXEL(x2, y2);
-
-		float error = 0;
-		float perror = 0;
-		int32_t dx = x2 - x1;
-		int32_t dy = y2 - y1;
-		int32_t y = y1;
-		int32_t x = x1;
-		int32_t diagError = -2*dx;
-		int32_t squareError = 2*dy;
-		int32_t threshold = dx - squareError;
-
-		for(int32_t i = 0;i < dx;++i) {
-			poctantleft(x, y, dx, dy, perror, thickness);
-			poctantright(x, y, dx, dy, perror, thickness);
-			if(error > threshold) {
-				++y;
-				error += diagError;
-				if(perror > threshold) {
-					poctantleft(x, y, dx, dy, perror + diagError + squareError, thickness);
-					poctantright(x, y, dx, dy, perror + diagError + squareError, thickness);
-					perror += diagError;
-				}
-				perror += squareError;
-			}
-			error += squareError;
-			++x;
-		}
-	}
-	void poctantleft(int32_t x, int32_t y, int32_t dx, int32_t dy, float err, uint8_t thickness) {
-		int32_t diagError = -2*dx;
-		int32_t squareError = 2*dy;
-		int32_t threshold = dx - squareError;
-		for(int32_t j = 0;j < thickness;++j) {
-			pixelNoTranslate(x, y);
-			if(err > threshold) {
-				--x;
-				err += diagError;
-			}
-			err += squareError;
-			++y;
-		}
-	}
-	void poctantright(int32_t x, int32_t y, int32_t dx, int32_t dy, float err, uint8_t thickness) {
-		int32_t diagError = -2*dx;
-		int32_t squareError = 2*dy;
-		int32_t threshold = -(dx - squareError);
-		for(int32_t j = 0;j < thickness;++j) {
-			pixelNoTranslate(x, y);
-			if(err < threshold) {
-				++x;
-				err -= diagError;
-			}
-			err -= squareError;
-			--y;
-		}
-	}
-
-	void murphy2(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint8_t thickness) {
-	  const bool steep = (fabs(y2 - y1) > fabs(x2 - x1));
-	  if(steep) {
-	    std::swap(x1, y1);
-	    std::swap(x2, y2);
-	  }
-	 
-	  if(x1 > x2) {
-	    std::swap(x1, x2);
-	    std::swap(y1, y2);
-	  }
-		int32_t dx = x2 - x1;
-		int32_t dy = y2 - y1;
-		int32_t threshold = dx - 2 * dy;
-		int32_t diagError = -2 * dx;
-		int32_t squareError = 2 * dy;
-		float w = 2 * thickness * sqrt(dx*dx+dy*dy);
-		int32_t x = x1;
-		int32_t y = y1;
-		int32_t err = 0, perr = 0;
-		for(int32_t i = 0;i <= dx;++i) {
-			perpOctant(x, y, dx, dy, perr, w, err);
-			if(err > threshold) {
-				++y;
-				err += diagError;
-				if(perr > threshold) {
-					perpOctant(x, y, dx, dy, perr + diagError + squareError, w, err);
-					perr += diagError;
-				}
-				perr += squareError;
-			}
-			err += squareError;
-			++x;
-		}
-	}
-	void perpOctant(int32_t x0, int32_t y0, int32_t dx, int32_t dy, float err, float w, float winit) {
-		int32_t threshold = dx - 2 * dy;
-		int32_t diagError = -2 * dx;
-		int32_t squareError = 2 * dy;
-
-		int32_t x = x0;
-		int32_t y = y0;
-		int32_t e = err;
-		int32_t tk = dx + dy - winit;
-		while(tk <= w) {
-			pixelNoTranslate(x, y);
-			if(e > threshold) {
-				--x;
-				e += diagError;
-				tk += squareError;
-			}
-			e += squareError;
-			tk -= diagError;
-			++y;
-		}
-
-		x = x0;
-		y = y0;
-		e = -err;
-		tk = dx + dy + winit;
-		while(tk <= w) {
-			pixelNoTranslate(x, y);
-			if(e > threshold) {
-				++x;
-				e += diagError;
-				tk += squareError;
-			}
-			e += squareError;
-			tk -= diagError;
-			--y;
-		}
 	}
 
 
