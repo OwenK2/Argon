@@ -1,14 +1,9 @@
 #ifndef ARGON_H
 #define ARGON_H
 
-
-#include <functional>
+#include <cstdlib>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-#define round(x) x < 0 ? (int)(x - 0.5f) : (int)(x + 0.5f)
 
-//WINDOW FLAGS
 #define ARGON_FULLSCREEN 1
 #define ARGON_HIDDEN 2
 #define ARGON_BORDERLESS 4
@@ -16,375 +11,572 @@
 #define ARGON_MINIMIZED 16
 #define ARGON_MAXIMIZED 32
 #define ARGON_HIGHDPI 64
-#define ARGON_NOQUIT 128
-#define ARGON_IMAGES 256
-#define ARGON_TEXT 528
+#define ARGON_ON_TOP 128 
+#define ARGON_NO_TASKBAR 256
+#define ARGON_MOUSE_CAPTURE 512
 
-#define ARGON_BASIC 72
+//RESOLUTIONS
+//Default is to maintin original resolution with letterboxes
+// #define ARGON_RESOLUTION_CLIP   // Clipped at top left
+// #define ARGON_RESOLUTION_CENTER // Cordinate system where origin is center of the screen
 
-class Argon;
-class Argon_Drawable;
-class Argon_Image;
+#if defined(ARGON_RESOLUTION_CENTER)
+	#define TRANSLATE_PIXEL(x,y) adjustCoordinate(x, y)
+#else
+	#define TRANSLATE_PIXEL(x,y)  //do nothing
+#endif
 
-enum MSGBoxType {
-	MSG_ERROR = SDL_MESSAGEBOX_ERROR,
-	MSG_WARN = SDL_MESSAGEBOX_WARNING,
-	MSG_INFO = SDL_MESSAGEBOX_INFORMATION
-};
-enum MSGBoxBtnType {
-	NONE = 0,
-	BTN_RETURN = SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT,
-	BTN_ESC = SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT,
-};
-struct Argon_Button {
-	MSGBoxBtnType flag;
-	int id;
-	const char* txt;
-};
-enum Argon_Flip {
-	ARGON_FLIP_NONE = SDL_FLIP_NONE,
-	ARGON_FLIP_HORIZONTAL = SDL_FLIP_HORIZONTAL,
-	ARGON_FLIP_VERTICAL = SDL_FLIP_VERTICAL,
-	ARGON_FLIP_BOTH = ARGON_FLIP_VERTICAL|ARGON_FLIP_HORIZONTAL
-};
-enum EventType {
-	LOAD,
-	QUIT,
-	CLOSE,
-	SHOWN,
-	HIDDEN,
-	EXPOSED,
-	MOVED,
-	RESIZE,
-	SIZECHANGED,
-	MINIMIZED,
-	MAXIMIZED,
-	RESTORED,
-	FOCUS,
-	BLUR,
-	TAKEFOCUS,
-	HITTEST,
-	MOUSEENTER,
-	MOUSELEAVE,
-	MOUSEUP,
-	MOUSEDOWN,
-	MOUSEMOVE,
-	CLICK,
-	DBLCLICK,
-	KEYUP,
-	KEYDOWN,
-	MOUSEWHEEL,
-	DROPFILE
-};
+typedef SDL_MessageBoxButtonData ButtonData;
 
 struct Event {
-	EventType type;
-};
-struct WindowEvent : Event {
-	int x;
-	int y;
-	int w;
-	int h;
-	bool shown;
-};
-struct MouseEvent : Event {
-	int x;
-	int y;
-	bool down;
-	bool ldown;
-	bool mdown;
-	bool rdown;
-	bool wdown;
-	uint8_t which;
-};
-struct Argon_Key {
-	const char* value;
-	int code;
-	Argon_Key(const char* val, int code) : value(val), code(code) {}
-	bool operator==(const char* rhs) {return strcmp(rhs,value) == 0;}
-	bool operator==(int rhs) {return rhs == code;}
-};
-class Argon_Key_State {
-private:
-	const uint8_t* states = NULL;
-public:
-	bool operator[](int index) {
-		return states[SDL_GetScancodeFromKey(index)];
-	}
-	bool operator[](char c) {
-		const char str[2] = {c, '\0'};
-		return states[SDL_GetScancodeFromName(str)];
-	}
-	bool operator[](const char* str) {
-		return states[SDL_GetScancodeFromName(str)];
-	}
-friend class Argon;
-};
-struct KeyboardEvent : Event {
-	Argon_Key key;
-	bool lshift;
-	bool rshift;
-	bool lctrl;
-	bool rctrl;
-	bool lalt;
-	bool ralt;
-	bool lmeta;
-	bool rmeta;
-	bool numlock;
-	bool capslock;
-	bool ctrl;
-	bool shift;
-	bool alt;
-	bool meta;
-};
-struct WheelEvent : Event {
-	int x;
-	int y;
-	bool dir;
-};
-struct FileEvent : Event {
-	const char* file;
 	uint32_t timestamp;
 };
-
-struct Mouse {
-	int x;
-	int y;
+struct WindowEvent : Event{
+	int32_t x;
+	int32_t y;
+	int32_t w;
+	int32_t h;
+};
+struct KeyEvent : Event {
+	SDL_Scancode scancode;
+	SDL_Keycode keycode;
+	bool repeat;
+	struct {
+		bool none 		: 1;
+		bool shift 		: 1;
+		bool lshift 	: 1;
+		bool rshift 	: 1;
+		bool ctrl 		: 1;
+		bool lctrl 		: 1;
+		bool rctrl 		: 1;
+		bool alt 			: 1;
+		bool lalt 		: 1;
+		bool ralt 		: 1;
+		bool meta 		: 1;
+		bool lmeta 		: 1;
+		bool rmeta 		: 1;
+		bool capslock : 1;
+		bool numlock 	: 1;
+		bool altgr 		: 1;
+	} mod;
+};
+struct MouseEvent : Event {
+	int32_t x;
+	int32_t y;
+	int32_t rx;
+	int32_t ry;
 	bool down;
-	bool ldown;
-	bool mdown;
-	bool rdown;
-	bool wdown;
+};
+struct MouseButtonEvent : Event {
+	int32_t x;
+	int32_t y;
 	uint8_t which;
+	uint8_t clicks;
 };
-struct Argon_HSL;
-struct Argon_RGB {
-	uint8_t r = 0;
-	uint8_t g = 0;
-	uint8_t b = 0;
-	uint8_t a = 0;
-	Argon_RGB() {}
-	Argon_RGB(uint8_t r,uint8_t g,uint8_t b,uint8_t a = 255) : r(r), g(g), b(b), a(a) {};
-	Argon_HSL toHSL();
+struct WheelEvent : Event {
+	int32_t dx;
+	int32_t dy;
+	bool down;
+	bool flipped;
 };
-struct Argon_HSL {
-	float h = 0;
-	float s = 0;
-	float l = 0;
-	float a = 0;
-	Argon_HSL() {}
-	Argon_HSL(float h,float s,float l,float a = 255) : h(h), s(s), l(l), a(a) {};
-	Argon_RGB toRGB();
+struct FileDropEvent : Event {
+	char* path;
 };
-struct Argon_Rect {
-	int x, y, w, h;
-};
-
-typedef std::function<void(Argon&,WindowEvent&)> WindowListener;
-typedef std::function<void(Argon&,MouseEvent&)> MouseListener;
-typedef std::function<void(Argon&,KeyboardEvent&)> KeyboardListener;
-typedef std::function<void(Argon&,WheelEvent&)> WheelListener;
-typedef std::function<void(Argon&,FileEvent&)> FileListener;
-typedef std::function<void(Argon&)> Task;
 
 class Argon {
+public:
+	Argon(const char* title, int32_t x, int32_t y, int32_t w, int32_t h, uint16_t flags = ARGON_RESIZEABLE|ARGON_HIGHDPI) : title(title), _x(x), _y(y), _w(w), _h(h), flags(flags) {}
+	Argon(const char* title, int32_t w, int32_t h, uint16_t flags) : Argon(title, SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,w,h,flags) {}
+	Argon(const char* title, int32_t w, int32_t h) : Argon(title, SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,w,h) {}
+	Argon(const char* title, uint16_t flags) : Argon(title, SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,500,500, flags) {}
+	Argon(const char* title) : Argon(title, SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,500,500, ARGON_RESIZEABLE|ARGON_HIGHDPI) {};
+	Argon() : Argon("Argon", SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,500,500, ARGON_RESIZEABLE|ARGON_HIGHDPI) {};
+	~Argon() {
+		_running = false;
+	  SDL_DestroyTexture(backbuffer);
+		SDL_DestroyRenderer(renderer);
+		SDL_DestroyWindow(window);
+	  SDL_DelEventWatch(handleResize, this);
+		SDL_Quit();
+	}
+
+
+	void begin() {
+		if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+  		fprintf(stderr, "Failed to initalize SDL\n");
+  		return;
+  	}
+
+    int sdlFlags = 0;
+    if(flags & ARGON_FULLSCREEN) {sdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;}
+    if(flags & ARGON_HIDDEN) {sdlFlags |= SDL_WINDOW_HIDDEN;}
+    if(flags & ARGON_BORDERLESS) {sdlFlags |= SDL_WINDOW_BORDERLESS;}
+    if(flags & ARGON_RESIZEABLE) {sdlFlags |= SDL_WINDOW_RESIZABLE;}
+    if(flags & ARGON_MINIMIZED) {sdlFlags |= SDL_WINDOW_MINIMIZED;}
+    if(flags & ARGON_MAXIMIZED) {sdlFlags |= SDL_WINDOW_MAXIMIZED;}
+    if(flags & ARGON_HIGHDPI) {sdlFlags |= SDL_WINDOW_ALLOW_HIGHDPI;}
+    if(flags & ARGON_ON_TOP) {sdlFlags |= SDL_WINDOW_ALWAYS_ON_TOP;}
+    if(flags & ARGON_NO_TASKBAR) {sdlFlags |= SDL_WINDOW_SKIP_TASKBAR;}
+    if(flags & ARGON_MOUSE_CAPTURE) {sdlFlags |= SDL_WINDOW_MOUSE_CAPTURE;}
+
+  	window = SDL_CreateWindow(title, _x, _y, _w, _h, sdlFlags);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_TARGETTEXTURE);
+    SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(window), &displayInfo);
+    SDL_SetWindowTitle(window, title);
+    SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+    SDL_GetWindowSize(window, &_w, &_h);
+    SDL_GetMouseState(&_mx, &_my);
+    SDL_GetWindowPosition(window, &_x, &_y);
+    #if defined(ARGON_RESOLUTION_CLIP)
+      windowRect = {0,0, _w, _h};
+      backbuffer = SDL_CreateTexture(renderer, displayInfo.format, SDL_TEXTUREACCESS_TARGET, displayInfo.w, displayInfo.h);
+    #elif defined(ARGON_RESOLUTION_CENTER)
+      windowRect = {displayInfo.w/2 - _w/2, displayInfo.h/2 - _h/2, _w, _h};
+      backbuffer = SDL_CreateTexture(renderer, displayInfo.format, SDL_TEXTUREACCESS_TARGET, displayInfo.w, displayInfo.h);
+      adjustCoordinate2(_mx, _my);
+    #else
+      backbuffer = SDL_CreateTexture(renderer, displayInfo.format, SDL_TEXTUREACCESS_TARGET, _w, _h);
+      SDL_RenderSetLogicalSize(renderer, _w, _h);
+    #endif
+    
+    SDL_SetRenderTarget(renderer, backbuffer);
+  	
+    SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
+    SDL_AddEventWatch(handleResize, this);
+    
+  	_running = true;
+
+
+  	//Local Variables for loop
+  	uint32_t startTime = 0;
+    uint32_t deltaTime = 0;
+  	SDL_Event event;
+
+    onLoad({SDL_GetTicks(), _x, _y, _w, _h});
+
+  	//Game Loop
+  	while(_running) {
+      SDL_SetRenderTarget(renderer, backbuffer);
+  		//Frame Rate
+  		if(deltaTime < 1) {
+  			startTime = SDL_GetTicks();
+  			SDL_Delay(1);
+  			deltaTime = SDL_GetTicks() - startTime;
+  		}
+  		startTime = SDL_GetTicks();
+
+  		//Events
+  		while(SDL_PollEvent(&event)) {
+  			handleEvent(event);
+  		}
+
+  		//Logic
+      gameLoop(deltaTime);
+
+  		//Render
+      SDL_SetRenderTarget(renderer, NULL);
+
+      #if defined(ARGON_RESOLUTION_CLIP) || defined(ARGON_RESOLUTION_CENTER)
+  		  SDL_RenderCopy(renderer, backbuffer, &windowRect, NULL);
+      #else
+        SDL_RenderCopy(renderer, backbuffer, NULL, NULL);
+      #endif
+
+      SDL_RenderPresent(renderer);
+
+  		//Frame Rate
+  		deltaTime = SDL_GetTicks() - startTime;
+  	}
+	}
+	void stop() {this->~Argon();}
+
+	// Event Handlers
+	virtual void onQuit(const Event event) {}
+	virtual void onLoad(const WindowEvent event) {}
+	virtual void onMouseDown(const MouseButtonEvent event) {}
+	virtual void onMouseUp(const MouseButtonEvent event) {}
+	virtual void onMouseMove(const  MouseEvent event) {}
+	virtual void onMouseWheel(const WheelEvent event) {}
+	virtual void onKeyDown(const KeyEvent event) {}
+	virtual void onKeyUp(const KeyEvent event) {}
+	virtual void onWindowShow(const WindowEvent event) {}
+	virtual void onWindowExpose(const WindowEvent event) {}
+	virtual void onWindowMove(const WindowEvent event) {}
+	virtual void onWindowResize(const WindowEvent event) {}
+	virtual void onWindowMinimize(const WindowEvent event) {}
+	virtual void onWindowMaximize(const WindowEvent event) {}
+	virtual void onWindowRestore(const WindowEvent event) {}
+	virtual void onMouseEnter(const MouseEvent event) {}
+	virtual void onMouseLeave(const MouseEvent event) {}
+	virtual void onWindowFocus(const WindowEvent event) {}
+	virtual void onWindowBlur(const WindowEvent event) {}
+	virtual void onWindowClose(const WindowEvent event) {}
+	virtual void onWindowTakeFocus(const WindowEvent event) {}
+	virtual void onWindowHitTest(const WindowEvent event) {}
+	virtual void onFileDrop(const FileDropEvent event) {}
+
+	//Main loop logic
+	virtual void gameLoop(const uint32_t deltaTime) {}
+
+	// Translating SDL Functions
+	void maximize() {SDL_MaximizeWindow(window);}
+	void minimize() {SDL_MinimizeWindow(window);}
+	void show() {SDL_ShowWindow(window);}
+	void hide() {SDL_HideWindow(window);}
+	void raise() {SDL_RaiseWindow(window);}
+	void restore() {SDL_RestoreWindow(window);}
+	void fullscreen() {SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);}
+	void setMaxSize(int w, int h) {SDL_SetWindowMaximumSize(window, w, h);}
+	void setMinSize(int w, int h) {SDL_SetWindowMinimumSize(window, w, h);}
+	void setOpacity(float opacity) {SDL_SetWindowOpacity(window, opacity);}
+	void setPosition(int x, int y) {SDL_SetWindowPosition(window, x, y);}
+	void setMousePosition(int x, int y) {SDL_WarpMouseInWindow(window, x, y);}
+	void setSize(int w, int h) {SDL_SetWindowSize(window, w, h);}
+	void setTitle(const char* title) {SDL_SetWindowTitle(window, title);}
+	void setIsResizable(bool resizable) {SDL_SetWindowResizable(window, (SDL_bool)resizable);}
+	void setBordered(bool bordered) {SDL_SetWindowBordered(window,(SDL_bool) bordered);}
+	void setBrightness(float brightness) {SDL_SetWindowBrightness(window, brightness);}
+	bool setCaptureMouse(bool capture = true) {return SDL_CaptureMouse((SDL_bool)capture) == 0;}
+	bool setRelativeMouseMode(bool relative) {return SDL_SetRelativeMouseMode((SDL_bool)relative) == 0;}
+	void setCursorDisplay(bool show) {SDL_ShowCursor(show ? SDL_ENABLE : SDL_DISABLE);}
+	bool alert(const char* message) {return SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, getTitle(), message, window) == 0;}
+	bool alert(const char* title, const char* message) {return SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, title, message, window) == 0;}
+	int alert(const char* title, const char* message, uint8_t numButtons, SDL_MessageBoxButtonData* btnData, SDL_MessageBoxFlags flag = SDL_MESSAGEBOX_INFORMATION) {int btn;SDL_MessageBoxData data = {flag, window, title, message, numButtons, btnData, NULL};SDL_ShowMessageBox(&data, &btn);return btn;	}
+
+	//Getters
+	bool running() {return _running;}
+	int32_t x() {return _x;} 
+	int32_t y() {return _y;} 
+	int32_t w() {return _w;} 
+	int32_t h() {return _h;} 
+	int32_t mx() {return _mx;}
+	int32_t my() {return _my;}
+	bool mouseDown() {return _down;}
+	bool getBorderSizes(int* top, int* right, int* bottom, int* left) {return SDL_GetWindowBordersSize(window, top, left, bottom, right) == 0;}
+	float getBrightness() {return SDL_GetWindowBrightness(window);}
+	void getMaxSize(int* w, int* h) {SDL_GetWindowMaximumSize(window, w, h);}
+	void getMinSize(int* w, int* h) {SDL_GetWindowMinimumSize(window, w, h);}
+	float getOpacity() {float o = -1;SDL_GetWindowOpacity(window, &o);return o;}
+	const char* getTitle() {return SDL_GetWindowTitle(window);}
+
+
+	// Graphics
+	void setColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) {SDL_SetRenderDrawColor(renderer, r,g,b,a);}
+	void clear() {SDL_RenderClear(renderer);}
+	void pixel(int32_t x, int32_t y) {
+		TRANSLATE_PIXEL(x, y);
+		SDL_RenderDrawPoint(renderer, x, y);
+	}
+	void line(int32_t x1, int32_t y1, int32_t x2, int32_t y2) {
+		TRANSLATE_PIXEL(x1, y1);
+		TRANSLATE_PIXEL(x2, y2);
+		SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+	}
+	void murphy(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint8_t thickness) {
+		TRANSLATE_PIXEL(x1, y1);
+		TRANSLATE_PIXEL(x2, y2);
+
+		float error = 0;
+		float perror = 0;
+		int32_t dx = x2 - x1;
+		int32_t dy = y2 - y1;
+		int32_t y = y1;
+		int32_t x = x1;
+		int32_t diagError = -2*dx;
+		int32_t squareError = 2*dy;
+		int32_t threshold = dx - squareError;
+
+		for(int32_t i = 0;i < dx;++i) {
+			poctantleft(x, y, dx, dy, perror, thickness);
+			poctantright(x, y, dx, dy, perror, thickness);
+			if(error > threshold) {
+				++y;
+				error += diagError;
+				if(perror > threshold) {
+					poctantleft(x, y, dx, dy, perror + diagError + squareError, thickness);
+					poctantright(x, y, dx, dy, perror + diagError + squareError, thickness);
+					perror += diagError;
+				}
+				perror += squareError;
+			}
+			error += squareError;
+			++x;
+		}
+	}
+	void poctantleft(int32_t x, int32_t y, int32_t dx, int32_t dy, float err, uint8_t thickness) {
+		int32_t diagError = -2*dx;
+		int32_t squareError = 2*dy;
+		int32_t threshold = dx - squareError;
+		for(int32_t j = 0;j < thickness;++j) {
+			pixelNoTranslate(x, y);
+			if(err > threshold) {
+				--x;
+				err += diagError;
+			}
+			err += squareError;
+			++y;
+		}
+	}
+	void poctantright(int32_t x, int32_t y, int32_t dx, int32_t dy, float err, uint8_t thickness) {
+		int32_t diagError = -2*dx;
+		int32_t squareError = 2*dy;
+		int32_t threshold = -(dx - squareError);
+		for(int32_t j = 0;j < thickness;++j) {
+			pixelNoTranslate(x, y);
+			if(err < threshold) {
+				++x;
+				err -= diagError;
+			}
+			err -= squareError;
+			--y;
+		}
+	}
+
+	void murphy2(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint8_t thickness) {
+	  const bool steep = (fabs(y2 - y1) > fabs(x2 - x1));
+	  if(steep) {
+	    std::swap(x1, y1);
+	    std::swap(x2, y2);
+	  }
+	 
+	  if(x1 > x2) {
+	    std::swap(x1, x2);
+	    std::swap(y1, y2);
+	  }
+		int32_t dx = x2 - x1;
+		int32_t dy = y2 - y1;
+		int32_t threshold = dx - 2 * dy;
+		int32_t diagError = -2 * dx;
+		int32_t squareError = 2 * dy;
+		float w = 2 * thickness * sqrt(dx*dx+dy*dy);
+		int32_t x = x1;
+		int32_t y = y1;
+		int32_t err = 0, perr = 0;
+		for(int32_t i = 0;i <= dx;++i) {
+			perpOctant(x, y, dx, dy, perr, w, err);
+			if(err > threshold) {
+				++y;
+				err += diagError;
+				if(perr > threshold) {
+					perpOctant(x, y, dx, dy, perr + diagError + squareError, w, err);
+					perr += diagError;
+				}
+				perr += squareError;
+			}
+			err += squareError;
+			++x;
+		}
+	}
+	void perpOctant(int32_t x0, int32_t y0, int32_t dx, int32_t dy, float err, float w, float winit) {
+		int32_t threshold = dx - 2 * dy;
+		int32_t diagError = -2 * dx;
+		int32_t squareError = 2 * dy;
+
+		int32_t x = x0;
+		int32_t y = y0;
+		int32_t e = err;
+		int32_t tk = dx + dy - winit;
+		while(tk <= w) {
+			pixelNoTranslate(x, y);
+			if(e > threshold) {
+				--x;
+				e += diagError;
+				tk += squareError;
+			}
+			e += squareError;
+			tk -= diagError;
+			++y;
+		}
+
+		x = x0;
+		y = y0;
+		e = -err;
+		tk = dx + dy + winit;
+		while(tk <= w) {
+			pixelNoTranslate(x, y);
+			if(e > threshold) {
+				++x;
+				e += diagError;
+				tk += squareError;
+			}
+			e += squareError;
+			tk -= diagError;
+			--y;
+		}
+	}
+
+
+
 private:
-	const char* name;
-	int sdl_flags = 0;
-	SDL_Window* win;
-	SDL_Renderer* ren;
-	SDL_Surface* surface;
-	bool running = false;
-	double frameTime;
-	bool quitOnClose = true;
-	bool imagesEnabled = false;
-	Argon_RGB bgColor = {0,0,0,0};
-	Argon_RGB fillColor = {255,255,255,255};
-	Argon_RGB strokeColor = {255,255,255,255};
-	uint8_t strokeWeight = 1;
-	bool doFill = true;
-	bool doStroke = true;
+	SDL_Window* window;
+	SDL_Renderer* renderer;
+	SDL_DisplayMode displayInfo;
+	SDL_Texture* backbuffer;
+	bool _running = false;
 
-	WindowListener loadListener = NULL;
-	WindowListener quitListener = NULL;
-	WindowListener closeListener = NULL;
-	WindowListener shownListener = NULL;
-	WindowListener hiddenListener = NULL;
-	WindowListener exposedListener = NULL;
-	WindowListener movedListener = NULL;
-	WindowListener resizeListener = NULL;
-	WindowListener sizeChangedListener = NULL;
-	WindowListener minimizedListener = NULL;
-	WindowListener maximizedListener = NULL;
-	WindowListener restoredListener = NULL;
-	WindowListener focusListener = NULL;
-	WindowListener blurListener = NULL;
-	WindowListener takeFocusListener = NULL;
-	WindowListener hitTestListener = NULL;
-	MouseListener mouseEnterListener = NULL;
-	MouseListener mouseLeaveListener = NULL;
-	MouseListener mouseUpListener = NULL;
-	MouseListener mouseDownListener = NULL;
-	MouseListener mouseMoveListener = NULL;
-	MouseListener clickListener = NULL;
-	MouseListener dblclickListener = NULL;
-	KeyboardListener keyUpListener = NULL;
-	KeyboardListener keyDownListener = NULL;
-	WheelListener mouseWheelListener = NULL;
-	FileListener dropFileListener = NULL;
+	//Window Information
+	#if defined(ARGON_RESOLUTION_CLIP) || defined(ARGON_RESOLUTION_CENTER)
+		SDL_Rect windowRect = {0};
+	#endif
+	uint16_t flags; 		// only for init (other functions may change later)
+	const char* title;  // only for init (other functions may change later
+	int32_t _x;
+	int32_t _y;
+	int32_t _w;
+	int32_t _h;
 
-	Task mainLoop = NULL;
+	//Mouse Information
+	int32_t _mx;
+	int32_t _my;
+	bool _down = false;
 
-	void gameLoop();
-	void eventWatcher(SDL_Event* e);
-	static int resizeWatcher(void* data, SDL_Event* e);
+	#if defined(ARGON_RESOLUTION_CENTER)
+		template<typename T>
+		void adjustCoordinate(T& x, T& y) {
+			x += displayInfo.w / 2;
+			y += displayInfo.h / 2;
+		}
+		template<typename T>
+		void adjustCoordinate2(T& x, T& y) {
+			x -= _w / 2;
+			y -= _h / 2;
+		}
+	#endif
+	void pixelNoTranslate(int32_t x, int32_t y) {
+		SDL_RenderDrawPoint(renderer, x, y);
+	}
 
-public:
-	int x;
-	int y;
-	int w;
-	int h;
-	bool shown;
-	Mouse mouse;
-	Argon_Key_State keys;
 
-	Argon();
-	Argon(const char* name);
-	Argon(const char* name, int flags);
-	Argon(const char* name, int fps, int flags);
-	Argon(const char* name, int w, int h, int flags);
-	Argon(const char* name, int w, int h, int fps, int flags);
-	Argon(const char* name, int x, int y, int w, int h, int fps, int flags);
-	~Argon();
-
-	//Window API
-	void start();
-	void resume();
-	void close();
-	void quit();
-	void setIcon(const char* file);
-	void grabMouse(bool grab);
-	void notification(const char* title, const char* msg, MSGBoxType type = MSG_INFO);
-	int prompt(const char* title, const char* msg, int numBtns, Argon_Button* buttons, MSGBoxType type = MSG_INFO);
-
-	//Loop API
-	void setLoop(Task loop);
-	void removeLoop();
-	void setFPS(int fps);
-
-	//Event API
-	void setListener(EventType type, WindowListener listner);
-	void setListener(EventType type, MouseListener listner);
-	void setListener(EventType type, KeyboardListener listner);
-	void setListener(EventType type, WheelListener listner);
-	void setListener(EventType type, FileListener listner);
-	void removeListener(EventType type);
-
-	//Drawing API
-	void clear();
-	void point(int x, int y);
-	void line(int x1, int y1, int x2, int y2);
-	void circle(int cx, int cy, int r);
-	Argon_RGB getPixel(int x, int y);
-	void putPixel(int x, int y, Argon_RGB& color);
-	void getPixelData(uint8_t* data, Argon_Rect* rect = NULL);
-	void putPixelData(uint8_t* data, Argon_Rect* rect = NULL);
-	void getPixelData(uint8_t* data, int x, int y, int w, int h);
-	void putPixelData(uint8_t* data, int x, int y, int w, int h);
-
-	//Drawing Settings API
-	void fill();
-	void noFill();
-	void stroke();
-	void noStroke();
-	void setFill(uint8_t r,uint8_t g,uint8_t b,uint8_t a = 255);
-	void setFill(Argon_RGB& color);
-	void setStroke(uint8_t r,uint8_t g,uint8_t b,uint8_t a = 255);
-	void setStroke(Argon_RGB& color);
-	void setBackground(uint8_t r,uint8_t g,uint8_t b,uint8_t a = 255);
-	void setBackground(Argon_RGB& color);
-	void setStrokeWeight(uint8_t weight);
-
-	//Color modifier functions go here
-	//- hue rotate
-	//- brightness setter
-	//- saturation setter
-
-	//Helper API
-	static const char* getEventTypeName(EventType type);
-
-friend class Argon_Drawable;
-friend class Argon_Image;
-friend class Argon_Shape;
+	// Event System
+	void handleEvent(SDL_Event& event) {
+		switch(event.type) {
+  		case SDL_QUIT: {
+        onQuit({event.quit.timestamp});
+  			stop();
+  			break;
+      }
+      case SDL_MOUSEBUTTONDOWN: {
+        _down = true;
+        onMouseDown({event.button.timestamp, _mx, _my, event.button.button, event.button.clicks});
+      	break;
+      }
+      case SDL_MOUSEBUTTONUP: {
+        _down = false;
+        onMouseUp({event.button.timestamp, _mx, _my, event.button.button, event.button.clicks});
+      	break;
+      }
+      case SDL_MOUSEMOTION: {
+        _mx = event.motion.x;
+        _my = event.motion.y;
+        #if defined(ARGON_RESOLUTION_CENTER)
+          adjustCoordinate2(_mx, _my);
+        #endif
+        onMouseMove({event.motion.timestamp, _mx, _my, event.motion.xrel, event.motion.yrel, _down});
+        break;
+      }
+      case SDL_MOUSEWHEEL: {
+        onMouseWheel({event.wheel.timestamp, event.wheel.x, event.wheel.y, _down, event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED});
+        break;
+      }
+      case SDL_KEYDOWN: {
+        onKeyDown({event.key.timestamp,event.key.keysym.scancode,event.key.keysym.sym,event.key.repeat > 0,{!static_cast<bool>((event.key.keysym.mod & KMOD_SHIFT) || (event.key.keysym.mod & KMOD_ALT) || (event.key.keysym.mod & KMOD_CTRL) || (event.key.keysym.mod & KMOD_GUI) || (event.key.keysym.mod & KMOD_CAPS) || (event.key.keysym.mod & KMOD_NUM) || (event.key.keysym.mod & KMOD_MODE)),static_cast<bool>(event.key.keysym.mod & KMOD_SHIFT),static_cast<bool>(event.key.keysym.mod & KMOD_LSHIFT),static_cast<bool>(event.key.keysym.mod & KMOD_RSHIFT),static_cast<bool>(event.key.keysym.mod & KMOD_CTRL),static_cast<bool>(event.key.keysym.mod & KMOD_LCTRL),static_cast<bool>(event.key.keysym.mod & KMOD_RCTRL),static_cast<bool>(event.key.keysym.mod & KMOD_ALT),static_cast<bool>(event.key.keysym.mod & KMOD_LALT),static_cast<bool>(event.key.keysym.mod & KMOD_RALT),static_cast<bool>(event.key.keysym.mod & KMOD_GUI),static_cast<bool>(event.key.keysym.mod & KMOD_LGUI),static_cast<bool>(event.key.keysym.mod & KMOD_RGUI),static_cast<bool>(event.key.keysym.mod & KMOD_CAPS),static_cast<bool>(event.key.keysym.mod & KMOD_NUM),static_cast<bool>(event.key.keysym.mod & KMOD_MODE)}});
+        break;
+      }
+      case SDL_KEYUP: {
+        onKeyUp({event.key.timestamp,event.key.keysym.scancode,event.key.keysym.sym,event.key.repeat > 0,{!static_cast<bool>((event.key.keysym.mod & KMOD_SHIFT) || (event.key.keysym.mod & KMOD_ALT) || (event.key.keysym.mod & KMOD_CTRL) || (event.key.keysym.mod & KMOD_GUI) || (event.key.keysym.mod & KMOD_CAPS) || (event.key.keysym.mod & KMOD_NUM) || (event.key.keysym.mod & KMOD_MODE)),static_cast<bool>(event.key.keysym.mod & KMOD_SHIFT),static_cast<bool>(event.key.keysym.mod & KMOD_LSHIFT),static_cast<bool>(event.key.keysym.mod & KMOD_RSHIFT),static_cast<bool>(event.key.keysym.mod & KMOD_CTRL),static_cast<bool>(event.key.keysym.mod & KMOD_LCTRL),static_cast<bool>(event.key.keysym.mod & KMOD_RCTRL),static_cast<bool>(event.key.keysym.mod & KMOD_ALT),static_cast<bool>(event.key.keysym.mod & KMOD_LALT),static_cast<bool>(event.key.keysym.mod & KMOD_RALT),static_cast<bool>(event.key.keysym.mod & KMOD_GUI),static_cast<bool>(event.key.keysym.mod & KMOD_LGUI),static_cast<bool>(event.key.keysym.mod & KMOD_RGUI),static_cast<bool>(event.key.keysym.mod & KMOD_CAPS),static_cast<bool>(event.key.keysym.mod & KMOD_NUM),static_cast<bool>(event.key.keysym.mod & KMOD_MODE)}});
+        break;
+      }
+      case SDL_WINDOWEVENT: {
+        switch(event.window.event) {
+          case SDL_WINDOWEVENT_SHOWN: {
+            onWindowShow({event.window.timestamp, _x, _y, _w, _h});
+            break;
+          }
+          case SDL_WINDOWEVENT_EXPOSED: {
+            onWindowExpose({event.window.timestamp, _x, _y, _w, _h});
+            break;
+          }
+          case SDL_WINDOWEVENT_MOVED: {
+            _x = event.window.data1;
+            _y = event.window.data2;
+            onWindowMove({event.window.timestamp, _x, _y, _w, _h});
+            break;
+          }
+          case SDL_WINDOWEVENT_SIZE_CHANGED: {
+            _w = event.window.data1;
+            _h = event.window.data2;
+            #if defined(ARGON_RESOLUTION_CLIP)
+              windowRect = {0,0, _w, _h};
+            #elif defined(ARGON_RESOLUTION_CENTER)
+              windowRect = {displayInfo.w/2 - _w/2, displayInfo.h/2 - _h/2, _w, _h};
+            #endif
+            onWindowResize({event.window.timestamp, _x, _y, _w, _h});
+            break;
+          }
+          case SDL_WINDOWEVENT_MINIMIZED: {
+            onWindowMinimize({event.window.timestamp, _x, _y, _w, _h});
+            break;
+          }
+          case SDL_WINDOWEVENT_MAXIMIZED: {
+            onWindowMaximize({event.window.timestamp, _x, _y, _w, _h});
+            break;
+          }
+          case SDL_WINDOWEVENT_RESTORED: {
+            onWindowRestore({event.window.timestamp, _x, _y, _w, _h});
+            break;
+          }
+          case SDL_WINDOWEVENT_ENTER: {
+            onMouseEnter({event.window.timestamp, _mx, _my, 0, 0, _down});
+            break;
+          }
+          case SDL_WINDOWEVENT_LEAVE: {
+            onMouseLeave({event.window.timestamp, _mx, _my, 0, 0, _down});
+            break;
+          }
+          case SDL_WINDOWEVENT_FOCUS_GAINED: {
+            onWindowFocus({event.window.timestamp, _x, _y, _w, _h});
+            break;
+          }
+          case SDL_WINDOWEVENT_FOCUS_LOST: {
+            onWindowBlur({event.window.timestamp, _x, _y, _w, _h});
+            break;
+          }
+          case SDL_WINDOWEVENT_CLOSE: {
+            onWindowClose({event.window.timestamp, _x, _y, _w, _h});
+            break;
+          }
+          case SDL_WINDOWEVENT_TAKE_FOCUS: {
+            onWindowTakeFocus({event.window.timestamp, _x, _y, _w, _h});
+            break;
+          }
+          case SDL_WINDOWEVENT_HIT_TEST: {
+            onWindowHitTest({event.window.timestamp, _x, _y, _w, _h});
+            break;
+          }
+          case SDL_DROPFILE: {
+            onFileDrop({event.drop.timestamp, event.drop.file});
+            SDL_free(event.drop.file);
+            break;
+          }
+        }
+      }
+  	}
+	}
+	static int handleResize(void* instance, SDL_Event* event) {
+  	if(event->type == SDL_WINDOWEVENT && event->window.event == SDL_WINDOWEVENT_RESIZED) {
+	    Argon* a = (Argon*) instance;
+	    a->_w = event->window.data1;
+	    a->_h = event->window.data2;
+	    #if defined(ARGON_RESOLUTION_CLIP)
+	      a->windowRect = {0,0, a->_w, a->_h};
+	    #elif defined(ARGON_RESOLUTION_CENTER)
+	      a->windowRect = {a->displayInfo.w/2 - a->_w/2, a->displayInfo.h/2 - a->_h/2, a->_w, a->_h};
+	    #endif
+	  }
+	  return 0;
+	}
 };
-
-class Argon_Drawable {
-protected:
-	int w;
-	int h;
-	uint8_t alpha = 255;
-	Argon_Flip flip = ARGON_FLIP_NONE;
-	double angle = 0;
-	SDL_Rect crop_rect;
-	SDL_Rect* crop_ptr = NULL;
-	SDL_Point center;
-	SDL_Point* center_ptr = NULL;
-
-
-	Argon& context;
-	SDL_Texture* texture;
-
-public:
-
-	Argon_Drawable(Argon& context, SDL_Texture* texture);
-	virtual ~Argon_Drawable();
-
-	void render(Argon_Rect* rect = NULL);
-	void render(int x, int y);
-	void render(int x, int y, int w, int h);
-
-	void modifyColor(uint8_t r, uint8_t g, uint8_t b);
-	void setAngle(double angle);
-	double getAngle();
-	void setFlip(Argon_Flip flip);
-	Argon_Flip getFlip();
-	void crop(Argon_Rect* rect = NULL);
-	void crop(int x, int y, int w, int h);
-	void resetCrop();
-	void setRotateCenter(int cx, int cy);
-	void resetRotateCenter();
-	void setAlpha(uint8_t alpha);
-	uint8_t getAlpha();
-
-	void addDrawable(Argon_Drawable& other);
-
-	int width();
-	int height();
-	void getSize(int* w, int* h);
-};
-
-class Argon_Image : public Argon_Drawable {
-private:
-	const char* path;
-public:
-	Argon_Image(Argon& context, const char* path);
-	const char* getFileName();
-
-};
-
-class Argon_Shape : public Argon_Drawable {
-private:
-	SDL_Surface* surface;
-public:
-	Argon_Shape(Argon& context, int w, int h);
-	~Argon_Shape();
-
-	void updateTexture();
-	void setPixel(int x, int y, Argon_RGB& color);
-	void hLine(int y, int x1, int x2, Argon_RGB& color);
-	void vLine(int x, int y1, int y2, Argon_RGB& color);
-};
-
 
 
 #endif

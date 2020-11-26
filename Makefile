@@ -6,7 +6,7 @@ CFLAGS		:= -std=c++17 -g
 SRCEXT		:= cpp
 SOURCES 	:= $(wildcard $(SRCDIR)/*.$(SRCEXT))
 OBJECTS		:= $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(SOURCES:.$(SRCEXT)=.o))
-LIB 			:= -lSDL2 -lSDL2_image -lSDL2_ttf
+LIB 			:= -lSDL2
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@printf "\e[33m\e[1mBuilding...\e[0m\n";
@@ -19,6 +19,9 @@ $(TARGET): $(OBJECTS)
 	@mkdir -p dist
 	@echo "  $(notdir $(OBJECTS))"
 	@$(CC) $(CFLAGS) $(LIB) -o $@ $^
+	@printf "\e[91m\e[1mCleaning...\e[0m\n"
+	@echo "  /$(BUILDDIR)"
+	@$(RM) -r $(BUILDDIR) $(OBJECTS)
 
 PHONY: r
 r:
