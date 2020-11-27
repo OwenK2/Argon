@@ -4,6 +4,10 @@
 #include <cstdlib>
 #include <SDL2/SDL.h>
 
+#include <chrono>
+#define START_SPEED_TEST() auto start = std::chrono::high_resolution_clock::now();
+#define END_SPEED_TEST(msg) auto end = std::chrono::high_resolution_clock::now();printf("%s: %lldns\n", msg, std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+
 #define ARGON_FULLSCREEN 1
 #define ARGON_HIDDEN 2
 #define ARGON_BORDERLESS 4
@@ -11,7 +15,7 @@
 #define ARGON_MINIMIZED 16
 #define ARGON_MAXIMIZED 32
 #define ARGON_HIGHDPI 64
-#define ARGON_ON_TOP 128 
+#define ARGON_ON_TOP 128
 #define ARGON_NO_TASKBAR 256
 #define ARGON_MOUSE_CAPTURE 512
 
@@ -22,12 +26,19 @@
 
 #if defined(ARGON_RESOLUTION_CENTER)
 	#define TRANSLATE_PIXEL(x,y) adjustCoordinate(x, y)
+	#define TRANSLATE_X(x) adjustCoordinateX(x)
+	#define TRANSLATE_Y(y) adjustCoordinateY(y)
 #else
 	#define TRANSLATE_PIXEL(x,y)  //do nothing
+	#define TRANSLATE_X(x) //do nothing
+	#define TRANSLATE_Y(y) //do nothing
 #endif
 
 typedef SDL_MessageBoxButtonData ButtonData;
 
+struct Color {
+	uint8_t r,g,b,a=255;
+};
 struct Event {
 	uint32_t timestamp;
 };
@@ -139,12 +150,12 @@ public:
       backbuffer = SDL_CreateTexture(renderer, displayInfo.format, SDL_TEXTUREACCESS_TARGET, _w, _h);
       SDL_RenderSetLogicalSize(renderer, _w, _h);
     #endif
-    
+
     SDL_SetRenderTarget(renderer, backbuffer);
-  	
+
     SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
     SDL_AddEventWatch(handleResize, this);
-    
+
   	_running = true;
 
 
@@ -246,10 +257,10 @@ public:
 
 	//Getters
 	bool running() {return _running;}
-	int32_t x() {return _x;} 
-	int32_t y() {return _y;} 
-	int32_t w() {return _w;} 
-	int32_t h() {return _h;} 
+	int32_t x() {return _x;}
+	int32_t y() {return _y;}
+	int32_t w() {return _w;}
+	int32_t h() {return _h;}
 	int32_t mx() {return _mx;}
 	int32_t my() {return _my;}
 	bool mouseDown() {return _down;}
@@ -262,18 +273,222 @@ public:
 
 
 	// Graphics
-	void setColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) {SDL_SetRenderDrawColor(renderer, r,g,b,a);}
+	void setColor(uint32_t c) {
+		SDL_SetRenderDrawBlendMode(renderer, (((c>>24)&255) == 255) ? SDL_BLENDMODE_NONE : SDL_BLENDMODE_BLEND);
+		SDL_SetRenderDrawColor(renderer, (c>>24)&255, (c>>16)&255, (c>>8)&255, c&255);
+	}
+	void setColor(Color c) {
+		SDL_SetRenderDrawBlendMode(renderer, (c.a == 255) ? SDL_BLENDMODE_NONE : SDL_BLENDMODE_BLEND);
+		SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
+	}
+	void setColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) {
+		SDL_SetRenderDrawBlendMode(renderer, (a == 255) ? SDL_BLENDMODE_NONE : SDL_BLENDMODE_BLEND);
+		SDL_SetRenderDrawColor(renderer, r, g, b, a);
+	}
+
 	void clear() {SDL_RenderClear(renderer);}
-	
 	void pixel(int32_t x, int32_t y) {
 		TRANSLATE_PIXEL(x, y);
 		SDL_RenderDrawPoint(renderer, x, y);
 	}
-	void line(int32_t x1, int32_t y1, int32_t x2, int32_t y2) {
+	void line(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint8_t thickness = 1) {
 		TRANSLATE_PIXEL(x1, y1);
 		TRANSLATE_PIXEL(x2, y2);
 		SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
 	}
+	void hline(int32_t x1, int32_t x2, int32_t y, uint8_t thickness = 1) {TRANSLATE_X(x1);TRANSLATE_X(x2);TRANSLATE_Y(y);SDL_RenderDrawLine(renderer, x1, y, x2, y);}
+	void vline(int32_t x, int32_t y1, int32_t y2, uint8_t thickness = 1) {TRANSLATE_X(x);TRANSLATE_Y(y1);TRANSLATE_Y(y2);SDL_RenderDrawLine(renderer, x, y1, x, y2);}
+	void rect(int32_t x, int32_t y, uint16_t w, uint16_t h, uint8_t thickness = 1) {
+		TRANSLATE_PIXEL(x, y);
+		for(uint8_t t = 0;t < thickness;++t) {
+			SDL_RenderDrawLine(renderer, x-t, y-t, x+w+t, y-t);
+			SDL_RenderDrawLine(renderer, x+w+t, y-t, x+w+t, y+h+t);
+			SDL_RenderDrawLine(renderer, x+w+t, y+h+t, x-t, y+h+t);
+			SDL_RenderDrawLine(renderer, x-t, y+h+t, x-t, y-t);
+		}
+	}
+	void filledRect(int32_t x, int32_t y, uint16_t w, uint16_t h) {
+		TRANSLATE_PIXEL(x, y);
+		SDL_Rect rect = {x, y, w, h};
+		SDL_RenderFillRect(renderer, &rect);
+	}
+	//https://www.geeksforgeeks.org/mid-point-circle-drawing-algorithm/?ref=rp
+	void circle(int32_t cx, int32_t cy, uint16_t r, uint8_t thickness = 1) {
+		TRANSLATE_PIXEL(cx, cy);
+		int32_t xo = r+thickness/2, xi = r-thickness/2, y = 0, dout = 1 - xo, din = 1-xi;
+		SDL_RenderDrawPoint(renderer, cx + r, cy);
+		SDL_RenderDrawPoint(renderer, cx - r, cy);
+		SDL_RenderDrawPoint(renderer, cx, cy + r);
+		SDL_RenderDrawPoint(renderer, cx, cy - r);
+
+		while(xo > y) {
+			++y;
+			if(dout <= 0) {
+				dout += 2 * y + 1;
+			}
+			else {
+				--xo;
+				dout += 2 * y - 2 * xo + 1;
+			}
+			if(y > r-thickness/2) {
+				xi = y;
+			}
+			else {
+				if(din < 0) {
+					din += 2 * y + 1;
+				}
+				else {
+					--xi;
+					din += 2 * y - 2 * xi + 1;
+				}
+			}
+			if(xo < y) break;
+			SDL_RenderDrawPoint(renderer, cx + xo, cy + y);
+			SDL_RenderDrawPoint(renderer, cx - xo, cy + y);
+			SDL_RenderDrawPoint(renderer, cx + xo, cy - y);
+			SDL_RenderDrawPoint(renderer, cx - xo, cy - y);
+
+			if(xo != y) {
+				SDL_RenderDrawPoint(renderer, cx + y, cy + xo);
+				SDL_RenderDrawPoint(renderer, cx - y, cy + xo);
+				SDL_RenderDrawPoint(renderer, cx + y, cy - xo);
+				SDL_RenderDrawPoint(renderer, cx - y, cy - xo);
+			}
+		}
+		// int xo = outer;
+    //  int xi = inner;
+    //  int y = 0;
+    //  int erro = 1 - xo;
+    //  int erri = 1 - xi;
+		//
+    //  while(xo >= y) {
+    //      xLine(xc + xi, xc + xo, yc + y,  colour);
+    //      yLine(xc + y,  yc + xi, yc + xo, colour);
+    //      xLine(xc - xo, xc - xi, yc + y,  colour);
+    //      yLine(xc - y,  yc + xi, yc + xo, colour);
+    //      xLine(xc - xo, xc - xi, yc - y,  colour);
+    //      yLine(xc - y,  yc - xo, yc - xi, colour);
+    //      xLine(xc + xi, xc + xo, yc - y,  colour);
+    //      yLine(xc + y,  yc - xo, yc - xi, colour);
+		//
+    //      y++;
+		//
+    //      if (erro < 0) {
+    //          erro += 2 * y + 1;
+    //      } else {
+    //          xo--;
+    //          erro += 2 * (y - xo + 1);
+    //      }
+		//
+    //      if (y > inner) {
+    //          xi = y;
+    //      } else {
+    //          if (erri < 0) {
+    //              erri += 2 * y + 1;
+    //          } else {
+    //              xi--;
+    //              erri += 2 * (y - xi + 1);
+    //          }
+    //      }
+    //  }
+	}
+	void fillCircle(int32_t cx, int32_t cy, uint16_t r) {
+		START_SPEED_TEST();
+		TRANSLATE_PIXEL(cx, cy);
+		int32_t x = r, y = 0, d = 1 - r;
+		SDL_RenderDrawLine(renderer, cx-r, cy, cx+r, cy);
+
+		while(x > y) {
+			++y;
+			if(d <= 0) {
+				d += 2 * y + 1;
+			}
+			else {
+				--x;
+				d += 2 * y - 2 * x + 1;
+			}
+			if(x < y) break;
+			SDL_RenderDrawLine(renderer, cx-x, cy+y, cx+x, cy+y);
+			SDL_RenderDrawLine(renderer, cx-x, cy-y, cx+x, cy-y);
+
+			if(x != y) {
+				SDL_RenderDrawLine(renderer, cx-y, cy+x, cx+y, cy+x);
+				SDL_RenderDrawLine(renderer, cx-y, cy-x, cx+y, cy-x);
+			}
+		}
+		END_SPEED_TEST("Fill circle");
+	}
+
+	//https://dai.fmph.uniba.sk/upload/0/01/Ellipse.pdf
+	void ellipse(int32_t cx, int32_t cy, uint16_t xr, uint16_t yr) {
+		TRANSLATE_PIXEL(cx, cy);
+		int32_t x, y;
+		int32_t delX, delY;
+		int32_t err;
+		int32_t twoXRSquared = 2*xr*xr,
+						twoYRSquared = 2*yr*yr;
+		int32_t stopX, stopY;
+
+		//go from x-axis until tangent to ellipse is -1
+		x = xr;
+		y = 0;
+		delX = yr*yr*(1-2*xr);
+		delY = xr*xr;
+		err = 0;
+		stopX = twoYRSquared*xr;
+		stopY = 0;
+		while(stopX >= stopY) {
+			//plot
+			SDL_RenderDrawPoint(renderer, cx+x, cy+y);
+			SDL_RenderDrawPoint(renderer, cx+x, cy-y);
+			SDL_RenderDrawPoint(renderer, cx-x, cy+y);
+			SDL_RenderDrawPoint(renderer, cx-x, cy-y);
+
+			++y;
+			stopY += twoXRSquared;
+			err += delY;
+			delY += twoXRSquared;
+			if((2*err+delX) > 0) {
+				--x;
+				stopX -= twoYRSquared;
+				err += delX;
+				delX += twoYRSquared;
+			}
+		}
+
+		//go from y-axis until tangent to ellipse is -1
+		x = 0;
+		y = yr;
+		delX = yr*yr;
+		delY = xr*xr*(1-2*yr);
+		err = 0;
+		stopX = 0;
+		stopY = twoXRSquared*yr;
+		while(stopX <= stopY) {
+			//plot
+			SDL_RenderDrawPoint(renderer, cx+x, cy+y);
+			SDL_RenderDrawPoint(renderer, cx+x, cy-y);
+			SDL_RenderDrawPoint(renderer, cx-x, cy+y);
+			SDL_RenderDrawPoint(renderer, cx-x, cy-y);
+
+			++x;
+			stopX += twoYRSquared;
+			err += delX;
+			delX += twoYRSquared;
+			if((2*err+delY) > 0) {
+				--y;
+				stopY -= twoXRSquared;
+				err += delY;
+				delY += twoXRSquared;
+			}
+		}
+	}
+	void thickEllipse(int32_t cx, int32_t cy, uint16_t ixr, uint16_t oxr, uint16_t iyr, uint16_t oyr) {
+		//STUB
+		//TODO: implement
+		//https://stackoverflow.com/questions/55980376/midpoint-thick-ellipse-drawing-algorithm/55983075
+	}
+
 
 
 
@@ -300,21 +515,27 @@ private:
 	int32_t _my;
 	bool _down = false;
 
+
 	#if defined(ARGON_RESOLUTION_CENTER)
 		template<typename T>
-		void adjustCoordinate(T& x, T& y) {
+		void adjustCoordinate(T& x, T& y) inline {
 			x += displayInfo.w / 2;
 			y += displayInfo.h / 2;
 		}
 		template<typename T>
-		void adjustCoordinate2(T& x, T& y) {
+		void adjustCoordinateX(T& x) inline {
+			x += displayInfo.w / 2;
+		}
+		template<typename T>
+		void adjustCoordinateY(T& y) inline {
+			y += displayInfo.h / 2;
+		}
+		template<typename T>
+		void adjustCoordinate2(T& x, T& y) inline {
 			x -= _w / 2;
 			y -= _h / 2;
 		}
 	#endif
-	void pixelNoTranslate(int32_t x, int32_t y) {
-		SDL_RenderDrawPoint(renderer, x, y);
-	}
 
 
 	// Event System
@@ -442,6 +663,7 @@ private:
 	    #elif defined(ARGON_RESOLUTION_CENTER)
 	      a->windowRect = {a->displayInfo.w/2 - a->_w/2, a->displayInfo.h/2 - a->_h/2, a->_w, a->_h};
 	    #endif
+	    a->onWindowResize({event->window.timestamp, a->_x, a->_y, a->_w, a->_h});
 	  }
 	  return 0;
 	}

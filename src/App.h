@@ -1,7 +1,6 @@
 #ifndef APP_H
 #define APP_H
 
-#define ARGON_RESOLUTION_CENTER
 
 #include "Argon.h"
 
