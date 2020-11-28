@@ -8,6 +8,10 @@ SOURCES 	:= $(wildcard $(SRCDIR)/*.$(SRCEXT))
 OBJECTS		:= $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(SOURCES:.$(SRCEXT)=.o))
 LIB 			:= -lSDL2
 
+ifeq ($(OS), Windows_NT)
+	CFLAGS += -mwindows
+endif
+
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@printf "\e[33m\e[1mBuilding...\e[0m\n";
 	@mkdir -p $(BUILDDIR)

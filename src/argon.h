@@ -1,7 +1,6 @@
 #ifndef ARGON_H
 #define ARGON_H
 
-#include <cstdlib>
 #include <SDL2/SDL.h>
 
 #include <chrono>
@@ -18,6 +17,11 @@
 #define ARGON_ON_TOP 128
 #define ARGON_NO_TASKBAR 256
 #define ARGON_MOUSE_CAPTURE 512
+#define ARGON_VSYNC 1024
+
+#if defined(ARGON_FIXED_FRAMERATE) && !defined(ARGON_FPS)
+	#define ARGON_FPS 60
+#endif
 
 //RESOLUTIONS
 //Default is to maintin original resolution with letterboxes
@@ -129,6 +133,7 @@ public:
     if(flags & ARGON_ON_TOP) {sdlFlags |= SDL_WINDOW_ALWAYS_ON_TOP;}
     if(flags & ARGON_NO_TASKBAR) {sdlFlags |= SDL_WINDOW_SKIP_TASKBAR;}
     if(flags & ARGON_MOUSE_CAPTURE) {sdlFlags |= SDL_WINDOW_MOUSE_CAPTURE;}
+    if(flags & ARGON_VSYNC) {vsyncEnabled=true;sdlFlags |= SDL_RENDERER_PRESENTVSYNC;}
 
   	window = SDL_CreateWindow(title, _x, _y, _w, _h, sdlFlags);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_TARGETTEXTURE);
@@ -160,30 +165,50 @@ public:
 
 
   	//Local Variables for loop
-  	uint32_t startTime = 0;
-    uint32_t deltaTime = 0;
+  	#ifdef ARGON_FIXED_FRAMERATE
+  		uint32_t now = 0;
+  		uint32_t nextStep = 0;
+  		constexpr uint32_t fps_step = 1000 / ARGON_FPS;
+  	#else
+  		uint32_t deltaTime = 0;
+  	#endif
+    
+    uint32_t step = 1000 / 60;
+    uint8_t limit = 10;
   	SDL_Event event;
 
     onLoad({SDL_GetTicks(), _x, _y, _w, _h});
 
+
   	//Game Loop
   	while(_running) {
-      SDL_SetRenderTarget(renderer, backbuffer);
-  		//Frame Rate
-  		if(deltaTime < 1) {
-  			startTime = SDL_GetTicks();
-  			SDL_Delay(1);
-  			deltaTime = SDL_GetTicks() - startTime;
-  		}
-  		startTime = SDL_GetTicks();
-
   		//Events
   		while(SDL_PollEvent(&event)) {
   			handleEvent(event);
   		}
 
   		//Logic
-      gameLoop(deltaTime);
+  		#ifdef ARGON_FIXED_FRAMERATE
+	  		now = SDL_GetTicks();
+	  		if(nextStep <= now || vsyncEnabled) {
+		  		SDL_SetRenderTarget(renderer, backbuffer);
+		  		limit = 10;
+		  		while(nextStep <= now && limit--) {
+		  			gameLoop();
+		  			nextStep += fps_step;
+		  		}
+		  	}
+		  	else {
+		  		#ifndef ARGON_FPS_NODELAY
+		  			printf("Waiting: %dms\n", nextStep - SDL_GetTicks());
+		  			SDL_Delay(nextStep - SDL_GetTicks());
+		  		#endif
+		  		continue;
+		  	}
+		  #else
+
+
+		  #endif
 
   		//Render
       SDL_SetRenderTarget(renderer, NULL);
@@ -196,8 +221,6 @@ public:
 
       SDL_RenderPresent(renderer);
 
-  		//Frame Rate
-  		deltaTime = SDL_GetTicks() - startTime;
   	}
 	}
 	void stop() {this->~Argon();}
@@ -228,7 +251,11 @@ public:
 	virtual void onFileDrop(const FileDropEvent event) {}
 
 	//Main loop logic
-	virtual void gameLoop(const uint32_t deltaTime) {}
+	#ifdef ARGON_FIXED_FRAMERATE
+		virtual void gameLoop() {}
+	#else
+		virtual void gameLoop(uint32_t deltaTime) {}
+	#endif
 
 	// Translating SDL Functions
 	void maximize() {SDL_MaximizeWindow(window);}
@@ -498,6 +525,7 @@ private:
 	SDL_DisplayMode displayInfo;
 	SDL_Texture* backbuffer;
 	bool _running = false;
+	bool vsyncEnabled = false;
 
 	//Window Information
 	#if defined(ARGON_RESOLUTION_CLIP) || defined(ARGON_RESOLUTION_CENTER)
